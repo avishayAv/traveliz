@@ -1,26 +1,37 @@
+import os
 from facebook_scraper import get_posts
 import pickle
 import datetime
+from tqdm import tqdm
 from Sublet import Sublet
 import time
 from FacebookGroup import FacebookGroups
+import random
 
 
-def get_data_from_facebook():
+def get_data_from_facebook(already_done):
     fb_groups = FacebookGroups().groups
     fb_groups_list_private = [group.group_id for group in fb_groups if not group.is_public]
     fb_groups_list_public = [group.group_id for group in fb_groups if group.is_public]
-    credentials = ('avishaya67@gmail.com', '0528773202')
-    list_of_sublets = []
+    credentials = [('avishaya67@gmail.com', '0528773202'), ('yishayahug@mail.tau.ac.il', 'w,+L<e8VjmJ+,6Y')]
     for fb_group in fb_groups_list_private:
-        for post in get_posts(group=fb_group, pages=5, credentials=credentials, options={"progress": True, "posts_per_page": 100}): # TODO : change number of pages and posts per page + add comments?
-            list_of_sublets.append(post)
-        time.sleep(120)
+        if fb_group not in already_done:
+            group_posts = []
+            for post in get_posts(group=fb_group, pages=random.randint(2, 6), credentials=random.choice(credentials),
+                                  options={"progress": True, "posts_per_page": random.randint(50,
+                                                                                              100)}):  # TODO : change number of pages and posts per page + add comments?
+                group_posts.append(post)
+            yield fb_group, group_posts
+            time.sleep(random.randint(0, 200))
     for fb_group in fb_groups_list_public:
-        for post in get_posts(group=fb_group, pages=5, options={"progress": True, "posts_per_page": 100}): # TODO : change number of pages and posts per page + add comments?
-            list_of_sublets.append(post)
-        time.sleep(120)
-    return list_of_sublets
+        if fb_group not in already_done:
+            group_posts = []
+            for post in get_posts(group=fb_group, pages=random.randint(1, 2), credentials=random.choice(credentials),
+                                  options={"progress": True, "posts_per_page": random.randint(50,
+                                                                                              100)}):  # TODO : change number of pages and posts per page + add comments?
+                group_posts.append(post)
+            yield fb_group, group_posts
+            time.sleep(random.randint(0, 200))
 
 
 def parse_data_from_facebook(list_of_sublets):
@@ -43,16 +54,19 @@ def parse_data_from_facebook(list_of_sublets):
 
 
 def facebook():
-    list_of_sublets = get_data_from_facebook()
-    pickle.dump(list_of_sublets, open('list_of_sublets.p', 'wb'))
-    # list_of_sublets = pickle.load(open("list_of_sublets.p", 'rb')) # Dummy for time saving
-    return parse_data_from_facebook(list_of_sublets)
+    dict_of_sublets = pickle.load(open("dict_of_sublets.p", 'rb')) if os.path.exists("dict_of_sublets.p") else {}
+    for group_id, group_posts in tqdm(get_data_from_facebook(already_done=set(dict_of_sublets.keys())),
+                                      desc='extracting groups data'):
+        dict_of_sublets[group_id] = group_posts
+        pickle.dump(dict_of_sublets, open('dict_of_sublets.p', 'wb'))
+    return parse_data_from_facebook(dict_of_sublets)
 
 
 def main():
     sublets = []
     sublets.extend(facebook())
     pass
+
 
 if __name__ == "__main__":
     main()
