@@ -51,8 +51,7 @@ def parse_data_from_facebook(dict_of_sublets):
         assert post_text is not None
         post_url = sublet['post_url']
         post_time = sublet['time']
-        start_date, end_date = extract_dates_from_text(
-            sublet['text'])  # TODO [AA] : should be list (in case of multiple date options)
+        start_date, end_date = extract_dates_from_text(post_text)
         location = sublet['listing_location'] if 'listing_location' in sublet else parse_location(post_title,
                                                                                                   post_text,
                                                                                                   group_id)  # TODO : 1.if None-parse from text, if number-figure out what is this number and decide
