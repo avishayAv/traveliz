@@ -6,8 +6,9 @@ from Sublet import Sublet
 import time
 from FacebookGroup import FacebookGroups
 import random
-from parsing_functions import *
-from DateParser import DatePatterns, DateReg
+import os
+
+from ParsingFunctions import *
 
 
 def get_data_from_facebook(already_done):
@@ -35,33 +36,13 @@ def get_data_from_facebook(already_done):
             time.sleep(random.randint(0, 200))
 
 
-# do not use datefinder - not working well with hebrew
-def extract_dates_from_text(text):
-    dates = []
-    for date_pattern in DatePatterns().patterns:
-        dates_regex = [DateReg(x, date_pattern, "." in x) for x in re.findall(date_pattern.pattern, text)]
-        for date_regex in dates_regex:
-            date_regex.complete_year()
-        dates.extend(dates_regex)
-        if (date_pattern.name.startswith('combined') and len(dates) >= 1) or len(dates) >= 2:
-            break
-
-    # Prioritize ranged dates
-    patterns = [d.date_pattern.is_range for d in dates] # TODO [AA] - 1. handle empty case  2. handle ranged case
-    if True in patterns or len(patterns) == 0:
-        return 'a', 'b'
-
-    real_dates = [dparser.parse(i.date, fuzzy=True, dayfirst=True).date() for i in dates]
-    return min(real_dates), max(real_dates)
-
-
 def parse_data_from_facebook(dict_of_sublets):
     list_of_sublets = []
     for group_id, posts in dict_of_sublets.items():
         for post in posts:
             list_of_sublets.append((group_id, post))
     sublets = []
-    for group_id, sublet in list_of_sublets:
+    for group_id, sublet in tqdm(list_of_sublets):
         post_title = sublet.get('title', '')
         post_text = sublet.get('text')
         if searching_for_sublet(post_title, post_text):
@@ -70,9 +51,11 @@ def parse_data_from_facebook(dict_of_sublets):
         assert post_text is not None
         post_url = sublet['post_url']
         post_time = sublet['time']
-        start_date, end_date = extract_dates_from_text(sublet['text']) # TODO [AA] : should be list (in case of multiple date options)
+        start_date, end_date = extract_dates_from_text(
+            sublet['text'])  # TODO [AA] : should be list (in case of multiple date options)
         location = sublet['listing_location'] if 'listing_location' in sublet else parse_location(post_title,
-                                                                                                  post_text,group_id)   # TODO : 1.if None-parse from text, if number-figure out what is this number and decide
+                                                                                                  post_text,
+                                                                                                  group_id)  # TODO : 1.if None-parse from text, if number-figure out what is this number and decide
         rooms = 0  # TODO : parse rooms from text
         prices = {'price_0': sublet['listing_price']} if 'listing_price' in sublet else parse_price(post_title,
                                                                                                     post_text)
@@ -86,10 +69,10 @@ def parse_data_from_facebook(dict_of_sublets):
 
 def facebook():
     dict_of_sublets = pickle.load(open("dict_of_sublets.p", 'rb')) if os.path.exists("dict_of_sublets.p") else {}
-    for group_id, group_posts in tqdm(get_data_from_facebook(already_done=set(dict_of_sublets.keys())),
-                                      desc='extracting groups data'):
-        dict_of_sublets[group_id] = group_posts
-        pickle.dump(dict_of_sublets, open('dict_of_sublets.p', 'wb'))
+    # for group_id, group_posts in tqdm(get_data_from_facebook(already_done=set(dict_of_sublets.keys())),
+    #                                   desc='extracting groups data'):
+    #     dict_of_sublets[group_id] = group_posts
+    #     pickle.dump(dict_of_sublets, open('dict_of_sublets.p', 'wb'))
     return parse_data_from_facebook(dict_of_sublets)
 
 
@@ -97,6 +80,7 @@ def main():
     sublets = []
     sublets.extend(facebook())
     pass
+
 
 if __name__ == "__main__":
     main()

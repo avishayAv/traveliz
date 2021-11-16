@@ -1,6 +1,8 @@
 import difflib
 import json
 import re
+import dateutil.parser as dparser
+from DateParser import DatePatterns, DateReg
 
 from FacebookGroup import FacebookGroups
 
@@ -74,3 +76,23 @@ def parse_location(title, text, group_id, locations_json_path='israel_cities.jso
         return None
     ret = sorted(optional_places, key=lambda x: x[1], reverse=True)[0]
     return ret[0]
+
+
+# do not use datefinder - not working well with hebrew
+def extract_dates_from_text(text):
+    dates = []
+    for date_pattern in DatePatterns().patterns:
+        dates_regex = [DateReg(x, date_pattern, "." in x) for x in re.findall(date_pattern.pattern, text)]
+        for date_regex in dates_regex:
+            date_regex.complete_year()
+        dates.extend(dates_regex)
+        if (date_pattern.name.startswith('combined') and len(dates) >= 1) or len(dates) >= 2:
+            break
+
+    # Prioritize ranged dates
+    patterns = [d.date_pattern.is_range for d in dates]  # TODO [AA] - 1. handle empty case  2. handle ranged case
+    if True in patterns or len(patterns) == 0:
+        return 'a', 'b'
+
+    real_dates = [dparser.parse(i.date, fuzzy=True, dayfirst=True).date() for i in dates]
+    return min(real_dates), max(real_dates)
