@@ -2,12 +2,13 @@ from facebook_scraper import get_posts
 import pickle
 import datetime
 from tqdm import tqdm
-from Sublet import Sublet
+from Sublet import Sublet, Airbnb
 import time
 from FacebookGroup import FacebookGroups
 import random
 import os
-
+import json
+from AirbnbUtils import activate_venv_command, airbnb_scraper_dir_path, airbnb_data_path, list_of_locations
 from ParsingFunctions import *
 
 
@@ -67,6 +68,60 @@ def parse_data_from_facebook(dict_of_sublets):
     return sublets
 
 
+
+def airbnb_scraper():
+    for location in list_of_locations:
+        assert len(location) == 2, f"location field is {location}, should be [<city, country>, <name of json file>]"
+        get_data_from_airbnb(location=location, start_date="2021-11-25", end_date="2021-11-28",
+                             number_of_pages_to_scrape=50)
+        time.sleep(random.randint(120, 200))
+
+
+def get_data_from_airbnb(location: list,
+                         start_date: str,
+                         end_date: str,
+                         max_price: int = 200,  # dollars
+                         min_price: int = 100,
+                         number_of_pages_to_scrape: int = 8):
+    command = 'scrapy crawl airbnb ' \
+              '-a query="' + location[0] + '"' + \
+              ' -a checkin=' + start_date + \
+              ' -a checkout=' + end_date + \
+              ' -a max_price=' + str(max_price) + \
+              ' -a min_price=' + str(min_price) \
+              + ' -o ' + location[1] + '.json ' \
+                                       '-s CLOSESPIDER_PAGECOUNT=' + str(number_of_pages_to_scrape)
+
+    os.system('( ' + activate_venv_command + ' && cd ' + airbnb_scraper_dir_path + ' && `' + command + '`)')
+
+
+def airbnb_read_data_from_json():
+    listings = []
+    for location in list_of_locations:
+        airbnb_data = parse_airbnb_data(airbnb_data_path + location[1] + ".json")
+        listings.extend(airbnb_data)
+    return listings
+
+# TODO [ES]: use israel_cities.json to retrieve listing location?
+def parse_airbnb_data(json_file_path: str):
+    airbnb_data = json.load(open(json_file_path, "rb"))
+    airbnb_listings = []
+    for listing in airbnb_data:
+        name = listing['name']
+        post_url = listing['url']
+        location = "unknown" if 'state' not in listing.keys() else listing['state']
+        description = listing['description']
+        rating = listing['rating_value']
+        reviews = listing['reviews']
+        images = listing['photos']
+        amenities = listing['amenities']
+        max_people = listing['person_capacity']
+        price = listing['price_rate']
+        airbnb_listings.append(
+            Airbnb(name, post_url, location, description, rating, reviews, images, amenities, max_people, price))
+    return airbnb_listings
+
+
 def facebook():
     dict_of_sublets = pickle.load(open("dict_of_sublets.p", 'rb')) if os.path.exists("dict_of_sublets.p") else {}
     # for group_id, group_posts in tqdm(get_data_from_facebook(already_done=set(dict_of_sublets.keys())),
@@ -77,8 +132,10 @@ def facebook():
 
 
 def main():
+    # airbnb_scraper()
+    airbnb_listings = airbnb_read_data_from_json()
     sublets = []
-    sublets.extend(facebook())
+    # sublets.extend(facebook())
     pass
 
 
