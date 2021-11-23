@@ -45,6 +45,7 @@ def parse_data_from_facebook(dict_of_sublets):
         for post in posts:
             list_of_sublets.append((group_id, post))
     sublets = []
+    parse_location = ParseLocation()
     for group_id, sublet in tqdm(list_of_sublets):
         post_title = sublet.get('title', '')
         post_text = sublet.get('text')
@@ -55,12 +56,9 @@ def parse_data_from_facebook(dict_of_sublets):
         post_url = sublet['post_url']
         post_time = sublet['time']
         start_date, end_date = extract_dates_from_text(post_text)
-        location = sublet['listing_location'] if 'listing_location' in sublet else parse_location(post_title,
-                                                                                                  post_text,
-                                                                                                  group_id)  # TODO : 1.if None-parse from text, if number-figure out what is this number and decide
+        location = parse_location(post_title, post_text, group_id,listing_location=sublet['listing_location'] if 'listing_location' in sublet else None)
         rooms = 0  # TODO : parse rooms from text
-        prices = {'price_0': sublet['listing_price']} if 'listing_price' in sublet else parse_price(post_title,
-                                                                                                    post_text)
+        prices = parse_price(post_title,post_text,listing_price=sublet['listing_price'] if 'listing_price' in sublet else None)
         max_people = 0  # TODO : parse max_people from text
         phones = parse_phone_number(post_title, post_text)  # TODO : parse phone from text
         images = sublet['images']
@@ -141,7 +139,7 @@ def main():
     # airbnb_scraper()
     airbnb_listings = airbnb_read_data_from_json()
     sublets = []
-    # sublets.extend(facebook())
+    sublets.extend(facebook())
     pass
 
 
