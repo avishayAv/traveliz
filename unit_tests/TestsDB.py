@@ -9,9 +9,12 @@ class Test:
         self.location: str = location
 
 class Tests:
-   def __init__(self):
+    def __init__(self):
       self.tests = [test1, test2, test3, test4, test5, test6, test7, test8, test9, test10,
                     test11, test12, test13, test14, test15, test16, test17, test18, test19, test20]
+
+    def dump_dates_to_test(self):
+        return [(test.text, test.start_date, test.end_date) for test in self.tests]
 
 
 test1 = Test(
