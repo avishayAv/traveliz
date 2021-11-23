@@ -2,14 +2,16 @@ from facebook_scraper import get_posts
 import pickle
 import datetime
 from tqdm import tqdm
-from Sublet import Sublet, Airbnb
+from Sublet import Sublet, Airbnb, Facebook
 import time
 from FacebookGroup import FacebookGroups
 import random
 import os
 import json
-from AirbnbUtils import activate_venv_command, airbnb_scraper_dir_path, airbnb_data_path, list_of_locations
+from AirbnbUtils import find_airbnb_listing_location, activate_venv_command,\
+    airbnb_scraper_dir_path, airbnb_data_path, list_of_locations
 from ParsingFunctions import *
+import numpy as np
 
 
 def get_data_from_facebook(already_done):
@@ -64,9 +66,9 @@ def parse_data_from_facebook(dict_of_sublets):
         phones = parse_phone_number(post_title, post_text)  # TODO : parse phone from text
         images = sublet['images']
         sublets.append(
-            Sublet(post_url, post_time, start_date, end_date, location, rooms, prices, max_people, phones, images))
+            Facebook(post_url, location, prices, max_people, images, rooms,
+                     post_time, start_date, end_date, phones))
     return sublets
-
 
 
 def airbnb_scraper():
@@ -102,23 +104,28 @@ def airbnb_read_data_from_json():
         listings.extend(airbnb_data)
     return listings
 
-# TODO [ES]: use israel_cities.json to retrieve listing location?
+
 def parse_airbnb_data(json_file_path: str):
     airbnb_data = json.load(open(json_file_path, "rb"))
     airbnb_listings = []
     for listing in airbnb_data:
         name = listing['name']
         post_url = listing['url']
-        location = "unknown" if 'state' not in listing.keys() else listing['state']
+        area = json_file_path.split('/')[-1].split(".")[0]
+        location = " ".join([find_airbnb_listing_location(listing["longitude"], listing["latitude"])+',', area])
         description = listing['description']
         rating = listing['rating_value']
         reviews = listing['reviews']
         images = listing['photos']
         amenities = listing['amenities']
         max_people = listing['person_capacity']
-        price = listing['price_rate']
+        prices = listing['price_rate']
+        rooms = listing["bedrooms"]# if listing["bedrooms"] != 0 else None,
+        bathrooms = listing["bathrooms"]# if listing["bathrooms"] != 0 else None,
+        beds = listing["beds"]# if listing["beds"] != 0 else None,
         airbnb_listings.append(
-            Airbnb(name, post_url, location, description, rating, reviews, images, amenities, max_people, price))
+            Airbnb(post_url, location, prices, max_people, images, rooms,
+                   name, description, rating, reviews, amenities, bathrooms, beds))
     return airbnb_listings
 
 
