@@ -1,3 +1,4 @@
+import datetime
 import difflib
 import json
 import re
@@ -61,7 +62,7 @@ def parse_location(title, text, group_id, locations_json_path='israel_cities.jso
     if len(optional_places) > 0:
         assert len(optional_places) == 1
         return optional_places[0]
-    israel_cities = json.load(open(locations_json_path, encoding='utf8'))
+    israel_cities = json.load(open(locations_json_path, encoding='utf8')) # TODO [YG] : this kind of things should be static (happen once)
     israel_cities = [x['name'] for x in israel_cities]
     words = re.findall(r'\w+', title + text)
     optional_places = []
@@ -79,6 +80,8 @@ def parse_location(title, text, group_id, locations_json_path='israel_cities.jso
 
 
 # do not use datefinder - not working well with hebrew
+# TODO [AA] : return value should be list(start,end) and not just (start,end) - in case of multiple date options
+# TODO [AA] : think about grepping other fields. maybe title if exist?
 def extract_dates_from_text(text):
     dates = []
     for date_pattern in DatePatterns().patterns:
@@ -89,10 +92,14 @@ def extract_dates_from_text(text):
         if (date_pattern.name.startswith('combined') and len(dates) >= 1) or len(dates) >= 2:
             break
 
+    if len(dates) == 0:     # TODO [AA] : handle empty case
+        return None, None
+
     # Prioritize ranged dates
-    patterns = [d.date_pattern.is_range for d in dates]  # TODO [AA] - 1. handle empty case  2. handle ranged case
-    if True in patterns or len(patterns) == 0:
-        return 'a', 'b'
+    range_dates = [d for d in dates if d.date_pattern.is_range]
+    if len(range_dates) > 0:
+        range_date = range_dates[0] # TODO [AA] : handle multiple ranges
+        return range_date.range_to_dates()
 
     real_dates = [dparser.parse(i.date, fuzzy=True, dayfirst=True).date() for i in dates]
     return min(real_dates), max(real_dates)
