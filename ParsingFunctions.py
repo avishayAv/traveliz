@@ -62,7 +62,8 @@ def parse_location(title, text, group_id, locations_json_path='israel_cities.jso
     if len(optional_places) > 0:
         assert len(optional_places) == 1
         return optional_places[0]
-    israel_cities = json.load(open(locations_json_path, encoding='utf8')) # TODO [YG] : this kind of things should be static (happen once)
+    israel_cities = json.load(
+        open(locations_json_path, encoding='utf8'))  # TODO [YG] : this kind of things should be static (happen once)
     israel_cities = [x['name'] for x in israel_cities]
     words = re.findall(r'\w+', title + text)
     optional_places = []
@@ -87,18 +88,18 @@ def extract_dates_from_text(text):
     for date_pattern in DatePatterns().patterns:
         dates_regex = [DateReg(x, date_pattern, "." in x) for x in re.findall(date_pattern.pattern, text)]
         for date_regex in dates_regex:
-            date_regex.complete_year()
+            date_regex.manipulate()
         dates.extend(dates_regex)
         if (date_pattern.name.startswith('combined') and len(dates) >= 1) or len(dates) >= 2:
             break
 
-    if len(dates) == 0:     # TODO [AA] : handle empty case
+    if len(dates) == 0:  # TODO [AA] : handle empty case
         return None, None
 
     # Prioritize ranged dates
     range_dates = [d for d in dates if d.date_pattern.is_range]
     if len(range_dates) > 0:
-        range_date = range_dates[0] # TODO [AA] : handle multiple ranges
+        range_date = range_dates[0]  # TODO [AA] : handle multiple ranges
         return range_date.range_to_dates()
 
     real_dates = [dparser.parse(i.date, fuzzy=True, dayfirst=True).date() for i in dates]
