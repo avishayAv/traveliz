@@ -14,7 +14,7 @@ def get_hex_unicode(reg_str):
     return uni_str
 
 
-# TODO [AA] : support whitespaces in all tests
+# TODO [AA] : support whitespaces in all tests patterns
 class DatePatterns:
     def __init__(self):
         self.patterns = [
