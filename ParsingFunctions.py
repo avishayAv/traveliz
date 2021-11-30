@@ -1,12 +1,10 @@
-import datetime
 import difflib
 import json
 import re
-import dateutil.parser as dparser
-from DateParser import DatePatterns, DateReg
-from utils import remove_time_stamp_from_text
 
+from DateParser import DatePatterns, DateReg
 from FacebookGroup import FacebookGroups
+from utils import remove_time_stamp_from_text
 
 
 def searching_for_sublet(title, text):
@@ -148,13 +146,13 @@ class ParseLocation:
 # do not use datefinder - not working well with hebrew
 # TODO [AA] : return value should be list(start,end) and not just (start,end) - in case of multiple date options
 # TODO [AA] : think about grepping other fields. maybe title if exist?
-def extract_dates_from_text(text):
+def extract_dates_from_text(text, post_time):
     text = remove_time_stamp_from_text(text)
     dates = []
     for date_pattern in DatePatterns().patterns:
         dates_regex = [DateReg(x, date_pattern) for x in re.findall(date_pattern.pattern, text)]
         for date_regex in dates_regex:
-            date_regex.manipulate()
+            date_regex.hebrew_to_calendar()
         dates.extend(dates_regex)
         if (date_pattern.name.startswith('combined') and len(dates) >= 1) or len(dates) >= 2:
             break
@@ -166,7 +164,9 @@ def extract_dates_from_text(text):
     range_dates = [d for d in dates if d.date_pattern.is_range]
     if len(range_dates) > 0:
         range_date = range_dates[0]  # TODO [AA] : handle multiple ranges
-        return range_date.range_to_dates()
+        return range_date.range_to_dates(post_time)
 
-    real_dates = [dparser.parse(i.date, fuzzy=True, dayfirst=True).date() for i in dates]
-    return min(real_dates), max(real_dates)
+    for date in dates:
+        date.complete_year(post_time)
+    dates = [inst.date for inst in dates]
+    return min(dates), max(dates)

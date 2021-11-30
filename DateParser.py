@@ -1,6 +1,8 @@
+import datetime
+from enum import Enum
+
 import dateutil
 import dateutil.parser as dparser
-from enum import Enum
 
 
 # Hebrew -> hex unicode
@@ -12,6 +14,7 @@ def get_hex_unicode(reg_str):
     return uni_str
 
 
+# TODO [AA] : support whitespaces in all tests patterns
 class DatePatterns:
     def __init__(self):
         self.patterns = [
@@ -68,6 +71,14 @@ class DateSeperator(Enum):
     BACKSLASH = 3
 
 
+def complete_year_by_time_stamp(date, post_time, seperator):
+    date = f'{date}{seperator}{post_time.year}'
+    date = dparser.parse(date, fuzzy=True, dayfirst=True).date()
+    while date < post_time:
+        date = datetime.date(date.year + 1, date.month, date.day)
+    return date
+
+
 class DateReg:
     def __init__(self, date, date_pattern):
         self.date: str = date
@@ -90,13 +101,9 @@ class DateReg:
         else:
             return '.'
 
-    def manipulate(self):
-        self.hebrew_to_calendar()
-        self.complete_year()
-
-    def complete_year(self):
+    def complete_year(self, post_time):
         if not self.date_pattern.with_year:
-            self.date = f'{self.date}{self.get_seperator()}21'  # TODO [AA] : change 2021 to good year
+            self.date = complete_year_by_time_stamp(self.date, post_time, self.get_seperator())
 
     def hebrew_to_calendar(self):
         if self.date_pattern.name == "part_date_half_hebrew_pattern":
@@ -107,12 +114,12 @@ class DateReg:
             assert date[1] in month_to_calendar
             self.date = date[0] + self.get_seperator() + str(month_to_calendar[date[1]])
 
-    def range_to_dates(self):
+    def range_to_dates(self, post_time):
         try:
             start_date, end_date = self.date.split('-')
+            end_date = complete_year_by_time_stamp(end_date, post_time, self.get_seperator())
             if self.date_pattern.name == 'combined_full_start_end_pattern4':
-                return self.fill_year_from_start_date_and_range_to_dates(end_date, start_date)
-            end_date = dparser.parse(end_date, fuzzy=True, dayfirst=True).date()
+                return self.fill_year_from_start_date_and_range_to_dates(end_date, start_date)  # TODO [AA] : re-exam
             splitted_start_date = start_date.split(self.get_seperator())
             if len(splitted_start_date) <= 1:  # DD only
                 start_date = start_date + self.get_seperator() + str(end_date.month)
@@ -125,9 +132,7 @@ class DateReg:
 
     def fill_year_from_start_date_and_range_to_dates(self, end_date, start_date):
         start_date = dparser.parse(start_date, fuzzy=True, dayfirst=True).date()
-        expected_end_date = end_date + self.get_seperator() + str(start_date.year)
-        expected_end_date = dparser.parse(expected_end_date, fuzzy=True, dayfirst=True).date()
+        expected_end_date = datetime.date(start_date.year, end_date.month, end_date.day)
         if expected_end_date < start_date:
-            end_date = end_date + self.get_seperator() + str(start_date.year + 1)
-            return start_date, dparser.parse(end_date, fuzzy=True, dayfirst=True).date()
+            expected_end_date = datetime.date(start_date.year + 1, end_date.month, end_date.day)
         return start_date, expected_end_date

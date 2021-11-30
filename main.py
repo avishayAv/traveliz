@@ -57,7 +57,7 @@ def parse_data_from_facebook(dict_of_sublets):
         assert post_text is not None
         post_url = sublet['post_url']
         post_time = sublet['time']
-        start_date, end_date = extract_dates_from_text(post_text)
+        start_date, end_date = extract_dates_from_text(post_text,post_time)
         location = parse_location(post_title, post_text, group_id,listing_location=sublet['listing_location'] if 'listing_location' in sublet else None)
         rooms = 0  # TODO : parse rooms from text
         prices = parse_price(post_title,post_text,listing_price=sublet['listing_price'] if 'listing_price' in sublet else None)
@@ -161,7 +161,7 @@ def main():
     # airbnb_scraper()
     airbnb_listings = airbnb_read_data_from_json()
     sublets = []
-    sublets.extend(facebook())
+    # sublets.extend(facebook())
     pass
 
 
