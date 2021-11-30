@@ -97,7 +97,7 @@ test7 = Test(
     start_date=datetime.date(2021, 11, 24),  # TODO [AA] : grep כניסה מיידית
     end_date=datetime.date(2021, 2, 24),
     price=[],
-    location='קריית טבעון')
+    location='טבעון')
 
 test8 = Test(
     post_time=datetime.date(2021, 11, 11),
@@ -237,7 +237,7 @@ test18 = Test(
          'מחיר ללא חשבונות : 2800 ש"ח + 500 לועד בית (בניין נקי, שקט ומאובטח עם מעלית)\nלפרטים ויצירת קשר\nאניטה : 0586694555',
     start_date=datetime.date(2021, 12, 1),
     end_date=datetime.date(2022, 6, 1),
-    price=[2800],
+    price=[500,2800],
     location='זכרון יעקב')
 
 test19 = Test(

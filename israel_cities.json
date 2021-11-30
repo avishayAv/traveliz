@@ -1770,6 +1770,12 @@
     "latt": 32.84403
   },
   {
+    "name": "גינוסר",
+    "english_name": "ginosar",
+    "long": 35.52279,
+    "latt": 32.84403
+  },
+  {
     "name": "גן שמואל",
     "english_name": "gan shemu'el",
     "long": 34.95495,
@@ -6487,6 +6493,12 @@
   },
   {
     "name": "קרית טבעון",
+    "english_name": "qiryat tiv'on",
+    "long": 35.11582,
+    "latt": 32.70695
+  },
+  {
+    "name": "טבעון",
     "english_name": "qiryat tiv'on",
     "long": 35.11582,
     "latt": 32.70695
