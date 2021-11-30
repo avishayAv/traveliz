@@ -78,7 +78,7 @@ test7 = Test(
     start_date=datetime.date(2021, 11, 24), # TODO [AA] : grep כניסה מיידית
     end_date=datetime.date(2021, 2, 24),
     price=[],
-    location='קריית טבעון')
+    location='טבעון')
 
 test8 = Test(
     text='להשכרה סאבלט ל3 חודשים, מתאריך 22 .31.12.21-31.03, יפו ג, 7'

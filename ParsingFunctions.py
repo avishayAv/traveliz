@@ -91,7 +91,7 @@ class ParseLocation:
         def clean_and_match(sub_text, decrease=0.0, similarity_th=0.85):
             res = match(sub_text, similarity_th, decrease=0 + decrease)
             if sub_text.startswith('ב'):
-                res += match(sub_text[1:], similarity_th, decrease=0.05 + decrease)
+                res += match(sub_text[1:], similarity_th, decrease=-0.05 + decrease)
             return res
 
         def match(sub_text, similarity_th=0.85, decrease=0.0):
@@ -101,9 +101,10 @@ class ParseLocation:
                 similarity = difflib.SequenceMatcher(None, place, sub_text).ratio() - decrease
                 if similarity > similarity_th:
                     res.append((place, similarity))
-                similarity = difflib.SequenceMatcher(None, place_in_english, sub_text).ratio() - decrease
-                if similarity > similarity_th:
-                    res.append((place, similarity))
+                if sub_text.isalpha():
+                    similarity = difflib.SequenceMatcher(None, place_in_english, sub_text).ratio() - decrease
+                    if similarity > similarity_th:
+                        res.append((place, similarity))
             return res
 
         # extract location from group name
