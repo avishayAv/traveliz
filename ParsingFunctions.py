@@ -4,6 +4,7 @@ import json
 import re
 import dateutil.parser as dparser
 from DateParser import DatePatterns, DateReg
+from utils import remove_time_stamp_from_text
 
 from FacebookGroup import FacebookGroups
 
@@ -147,11 +148,12 @@ class ParseLocation:
 # TODO [AA] : return value should be list(start,end) and not just (start,end) - in case of multiple date options
 # TODO [AA] : think about grepping other fields. maybe title if exist?
 def extract_dates_from_text(text):
+    text = remove_time_stamp_from_text(text)
     dates = []
     for date_pattern in DatePatterns().patterns:
-        dates_regex = [DateReg(x, date_pattern, "." in x) for x in re.findall(date_pattern.pattern, text)]
+        dates_regex = [DateReg(x, date_pattern) for x in re.findall(date_pattern.pattern, text)]
         for date_regex in dates_regex:
-            date_regex.complete_year()
+            date_regex.manipulate()
         dates.extend(dates_regex)
         if (date_pattern.name.startswith('combined') and len(dates) >= 1) or len(dates) >= 2:
             break
