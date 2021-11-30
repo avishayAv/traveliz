@@ -1,5 +1,6 @@
 import dateutil
 import dateutil.parser as dparser
+from enum import Enum
 
 
 # Hebrew -> hex unicode
@@ -15,7 +16,9 @@ class DatePatterns:
     def __init__(self):
         self.patterns = [
             DatePattern("combined_full_start_end_pattern1", "\d+[-]\d+[/.]\d+[/.]\d+", True, True),  # DD-DD/MM/YY
-            DatePattern("combined_full_start_end_pattern2", "\d+[/.]\d+[/.]\d+[-]\d+[/.]\d+[/.]\d+", True, True),
+            DatePattern("combined_full_start_end_pattern2",
+                        "\d+\s*[\\\\/.]\s*\d+\s*[\\\\/.]\s*\d+\s*[-]\s*\d+\s*[\\\\/.]\s*\d+\s*[\\\\/.]\s*\d+", True,
+                        True),
             # DD/MM/YY-DD/MM/YY
             DatePattern("combined_full_start_end_pattern3", "\d+[/.]\d+[-]\d+[/.]\d+[/.]\d+", True, True),
             # DD/MM-DD/MM/YY
@@ -59,14 +62,33 @@ class DatePattern:
         self.is_range: bool = is_range
 
 
+class DateSeperator(Enum):
+    DOT = 1
+    SLASH = 2
+    BACKSLASH = 3
+
+
 class DateReg:
-    def __init__(self, date, date_pattern, with_dots):
+    def __init__(self, date, date_pattern):
         self.date: str = date
         self.date_pattern: DatePattern = date_pattern
-        self.with_dots: bool = with_dots
+        self.with_dots: DateSeperator = self.init_seperator()
+
+    def init_seperator(self):
+        if '/' in self.date:
+            return DateSeperator.SLASH
+        elif '\\' in self.date:
+            return DateSeperator.BACKSLASH
+        else:
+            return DateSeperator.DOT
 
     def get_seperator(self):
-        return '.' if self.with_dots else '/'
+        if self.with_dots == DateSeperator.SLASH:
+            return '/'
+        elif self.with_dots == DateSeperator.BACKSLASH:
+            return '\\'
+        else:
+            return '.'
 
     def manipulate(self):
         self.hebrew_to_calendar()
@@ -104,7 +126,7 @@ class DateReg:
     def fill_year_from_start_date_and_range_to_dates(self, end_date, start_date):
         start_date = dparser.parse(start_date, fuzzy=True, dayfirst=True).date()
         expected_end_date = end_date + self.get_seperator() + str(start_date.year)
-        expected_end_date = dparser.parse(end_date, fuzzy=True, dayfirst=True).date()
+        expected_end_date = dparser.parse(expected_end_date, fuzzy=True, dayfirst=True).date()
         if expected_end_date < start_date:
             end_date = end_date + self.get_seperator() + str(start_date.year + 1)
             return start_date, dparser.parse(end_date, fuzzy=True, dayfirst=True).date()
