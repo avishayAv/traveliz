@@ -11,7 +11,8 @@ class Test:
 class Tests:
     def __init__(self):
       self.tests = [test1, test2, test3, test4, test5, test6, test7, test8, test9, test10,
-                    test11, test12, test13, test14, test15, test16, test17, test18, test19, test20]
+                    test11, test12, test13, test14, test15, test16, test17, test18, test19, test20,
+                    test21]
 
     def dump_dates_to_test(self):
         return [(test.text, test.start_date, test.end_date) for test in self.tests]
@@ -93,7 +94,7 @@ test8 = Test(
     location='יפו')
 
 test9 = Test(
-    text="SUBLET FOR 3 MONTHS \\\\ 1.5 ROOMS FLAT \\\\CITY CENTER 🌈☀🌷\n\n14\\\\ 11 \\\\21 - 09 \\\\ 02 \\\\ 22\n\n"
+    text="SUBLET FOR 3 MONTHS \\\\ 1.5 ROOMS FLAT \\\\CITY CENTER 🌈☀🌷\n\n14\\ 11 \\21 - 09 \\ 02 \\ 22\n\n"
          "Spacious 1.5 rooms basement apartment with lots of good vibes.\nFully furnished - comfortable double bed"
          ", SMART TV '55, WIFI, AC, equipped kitchen 😎\n\nA minute walk from Gan Meir, King George, Dizengoff square"
          ", Carmel Market, the Kerem and the beach.\nlocated on Zalman Shneur street.\nA quiet cozy place full of privacy"
@@ -234,3 +235,10 @@ test20 = Test(
     end_date=datetime.date(2021, 12, 11),
     price=[1500, 2200],
     location='שתולה')
+
+test21 = Test(
+    text="SUBLET FOR 3 MONTHS \\\\ 1.5 ROOMS FLAT \\\\CITY CENTER",
+    start_date=None,
+    end_date=None,
+    price=None,
+    location='תל אביב')
