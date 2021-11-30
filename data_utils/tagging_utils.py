@@ -58,10 +58,10 @@ def create_excel_for_tagging_data():
         ws.conditional_formatting.add('D2:D101', rule2)
         ws.conditional_formatting.add('E2:E101', rule3)
         ws.conditional_formatting.add('F2:F101', rule4)
-        ws.conditional_formatting.add('C2:C101', FormulaRule(formula=['ISBLANK(C1)'], stopIfTrue=True, fill=yellowFill))
-        ws.conditional_formatting.add('D2:D101', FormulaRule(formula=['ISBLANK(D1)'], stopIfTrue=True, fill=yellowFill))
-        ws.conditional_formatting.add('E2:E101', FormulaRule(formula=['ISBLANK(E1)'], stopIfTrue=True, fill=yellowFill))
-        ws.conditional_formatting.add('F2:F101', FormulaRule(formula=['ISBLANK(F1)'], stopIfTrue=True, fill=yellowFill))
+        ws.conditional_formatting.add('C1:C101', FormulaRule(formula=['ISBLANK(C1)'], stopIfTrue=True, fill=yellowFill))
+        ws.conditional_formatting.add('D1:D101', FormulaRule(formula=['ISBLANK(D1)'], stopIfTrue=True, fill=yellowFill))
+        ws.conditional_formatting.add('E1:E101', FormulaRule(formula=['ISBLANK(E1)'], stopIfTrue=True, fill=yellowFill))
+        ws.conditional_formatting.add('F1:F101', FormulaRule(formula=['ISBLANK(F1)'], stopIfTrue=True, fill=yellowFill))
 
         for collumn in [ws['C'], ws['D'], ws['E'], ws['F']]:
             for cell in collumn:
