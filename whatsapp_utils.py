@@ -1,20 +1,63 @@
 import os
-import csv
 
 from bs4 import BeautifulSoup
 from time import sleep
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, StaleElementReferenceException, \
-    ElementNotInteractableException
-from prettytable import PrettyTable
+from selenium.common.exceptions import TimeoutException
 from dotenv import load_dotenv
 from timeit import default_timer as timer
+
+
+def is_media_in_message(message):
+    '''Returns True if media is discovered within the message by checking the soup for known media flags. If not, it returns False.'''
+
+    # First check for data-testid attributes containing 'media' or 'download' (this covers gifs, videos, downloadable content)
+    possible_media_spans = message.find_all(attrs={'data-testid': True})
+    for span in possible_media_spans:
+        # Media types are stored in 'data-testid' attribute
+        media_attr = span.get('data-testid')
+
+        if 'media' in media_attr or 'download' in media_attr:
+            return True
+        else:
+            continue
+
+    # Check if the media is a shared contact e.g. vCard/VCF, or a sticker
+    if message.get('class'):
+        # Check for shared contact
+        copyable = message.find('div', 'copyable-text')
+        if copyable:
+            # Get all buttons
+            buttons = copyable.find_all('div', {'role': 'button'})
+            if buttons:
+                # Look for contact card button pattern (2 divs w/ titles of 'Message X' and 'Add to a group')
+                for button in buttons:
+                    # Only check buttons with Title attribute
+                    if button.get('title'):
+                        # Check if 'Message' is in the title (full title would be for example 'Message Bob Ross')
+                        if 'Message' in button.get('title'):
+                            # Next sibling should always be the 'Add to a group' button
+                            if button.nextSibling:
+                                if button.nextSibling.get('title') == 'Add to a group':
+                                    return True
+
+        # Check for group sticker (2 side-by-side stickers)
+        if 'grouped-sticker' in message.get('data-id'):
+            return True
+
+        # Check for individual sticker
+        images = message.find_all('img')
+        if images:
+            for image in images:
+                if 'blob' in image.get('src'):
+                    return True
+
+    return False
 
 
 def download_data_from_groups(groups):
@@ -26,7 +69,7 @@ def download_data_from_groups(groups):
         print("You've quit WhatSoup.")
         driver.quit()
         return
-
+    data_for_group = {}
     # Prompt user to select a chat for export, then locate and load it in WhatsApp
     for group in groups:
         chat_is_loaded = False
@@ -56,9 +99,10 @@ def download_data_from_groups(groups):
 
         # Scrape the chat history
         scraped = scrape_chat(driver)
+        data_for_group[group] = scraped
 
     driver.quit()
-    return
+    return data_for_group
 
 
 def setup_selenium():
@@ -133,6 +177,7 @@ def user_is_logged_in(driver, wait_time):
         return True
     except TimeoutException:
         return False
+
 
 def load_selected_chat(driver):
     '''Loads entire chat history by repeatedly scrolling up to fetch more data from WhatsApp'''
@@ -347,7 +392,7 @@ def scrape_chat(driver):
             message_scraped['datetime'] = copyable_scrape['datetime']
             last_msg_date = message_scraped['datetime']
             message_scraped['sender'] = copyable_scrape['sender']
-            message_scraped['message'] = copyable_scrape['message']
+            message_scraped['text'] = copyable_scrape['message']
 
             # Check if message has 'selectable-text' (selectable-text tends to be a copyable-text child container span/div for messages that have text in it, storing the actual chat message text/emojis)
             if copyable_text.find('span', 'selectable-text'):
@@ -611,53 +656,6 @@ def parse_datetime(text, time_only=False):
             f"{text} does not match expected time format of '%I:%M %p'. Make sure your WhatsApp language settings on your phone are set to English.")
 
 
-def is_media_in_message(message):
-    '''Returns True if media is discovered within the message by checking the soup for known media flags. If not, it returns False.'''
-
-    # First check for data-testid attributes containing 'media' or 'download' (this covers gifs, videos, downloadable content)
-    possible_media_spans = message.find_all(attrs={'data-testid': True})
-    for span in possible_media_spans:
-        # Media types are stored in 'data-testid' attribute
-        media_attr = span.get('data-testid')
-
-        if 'media' in media_attr or 'download' in media_attr:
-            return True
-        else:
-            continue
-
-    # Check if the media is a shared contact e.g. vCard/VCF, or a sticker
-    if message.get('class'):
-        # Check for shared contact
-        copyable = message.find('div', 'copyable-text')
-        if copyable:
-            # Get all buttons
-            buttons = copyable.find_all('div', {'role': 'button'})
-            if buttons:
-                # Look for contact card button pattern (2 divs w/ titles of 'Message X' and 'Add to a group')
-                for button in buttons:
-                    # Only check buttons with Title attribute
-                    if button.get('title'):
-                        # Check if 'Message' is in the title (full title would be for example 'Message Bob Ross')
-                        if 'Message' in button.get('title'):
-                            # Next sibling should always be the 'Add to a group' button
-                            if button.nextSibling:
-                                if button.nextSibling.get('title') == 'Add to a group':
-                                    return True
-
-        # Check for group sticker (2 side-by-side stickers)
-        if 'grouped-sticker' in message.get('data-id'):
-            return True
-
-        # Check for individual sticker
-        images = message.find_all('img')
-        if images:
-            for image in images:
-                if 'blob' in image.get('src'):
-                    return True
-
-    return False
-
-
 def find_media_sender_when_copyable_does_not_exist(message):
     '''Returns a sender's name when there's no 'copyable-text' attribute within the message'''
 
@@ -704,7 +702,3 @@ def find_media_sender_when_copyable_does_not_exist(message):
     else:
         # TODO: Study this pattern more and fix later if possible. Solution for now is to return None and then we take the last message's sender from our data structure.
         return None
-
-
-if __name__ == "__main__":
-    download_data_from_groups(groups=['סאבלט בדפנה'])

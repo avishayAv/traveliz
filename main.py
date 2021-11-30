@@ -13,6 +13,8 @@ from AirbnbUtils import find_airbnb_listing_location, activate_venv_command,\
 from ParsingFunctions import *
 import numpy as np
 
+from whatsapp_utils import download_data_from_groups
+
 
 def get_data_from_facebook(already_done):
     fb_groups = FacebookGroups().groups
@@ -133,6 +135,26 @@ def facebook():
     #     dict_of_sublets[group_id] = group_posts
     #     pickle.dump(dict_of_sublets, open('dict_of_sublets.p', 'wb'))
     return parse_data_from_facebook(dict_of_sublets)
+
+def parse_data_from_whatsapp(data):
+    parse_location = ParseLocation()
+    group_to_location = {'סאבלט בדפנה':'דפנה'}
+    for group_name, messages_per_date in data.items():
+        for date1, messages in messages_per_date.items():
+            for message in messages:
+                post_time = datetime.datetime.strptime(date1+'/'+message['time'],'%m/%d/%Y/%I:%M %p')
+                price = parse_price(message['text'],None,None)
+                location = parse_location(text=message['text'],title=None,group_id=None,listing_location=group_to_location[group_name])
+                phone = message['sender']
+
+
+
+
+
+def whatsapp():
+    groups = ['סאבלט בדפנה']
+    data = download_data_from_groups(groups)
+    parse_data_from_whatsapp(data)
 
 
 def main():

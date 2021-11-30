@@ -109,11 +109,12 @@ class ParseLocation:
             return res
 
         # extract location from group name
-        fb_groups = FacebookGroups().groups
-        optional_places = [x.location for x in fb_groups if x.group_id == group_id and x.location is not None]
-        if len(optional_places) > 0:
-            assert len(optional_places) == 1
-            return optional_places[0]
+        if group_id is not None:
+            fb_groups = FacebookGroups().groups
+            optional_places = [x.location for x in fb_groups if x.group_id == group_id and x.location is not None]
+            if len(optional_places) > 0:
+                assert len(optional_places) == 1
+                return optional_places[0]
 
         # extract location from listing location field in facebook
 

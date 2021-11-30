@@ -12,6 +12,8 @@ class TestPriceParser(unittest.TestCase):
         for test in Tests().tests:
             prices = parse_price(test.text, '', listing_price=None)
             prices = [x[0] for x in prices.values()]
+            if test.price is None:
+                test.price = []
             self.assertEqual(prices, test.price)
 
 
