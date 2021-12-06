@@ -13,7 +13,7 @@ from AirbnbUtils import find_airbnb_listing_location, activate_venv_command,\
 from ParsingFunctions import *
 import numpy as np
 from whatsapp_utils import download_data_from_groups
-from data_utils.tagging_utils import create_excel_for_tagging_data, read_excel
+from data_utils.tagging_utils import read_excel_end_create_dict_of_tagged_data
 
 
 def get_data_from_facebook(already_done):
@@ -165,13 +165,11 @@ def main():
     # airbnb_listings = airbnb_read_data_from_json()
     # sublets = []
     #ws['A1'] = a[2]['text']
-
-    create_excel_for_tagging_data()
-    x = read_excel('Eliya')
+    posts_dict = read_excel_end_create_dict_of_tagged_data(name="facebook_posts_1")
     y = 5
     # excel_data_df = pd.read_excel('/Users/eliyasegev/Desktop/Tagged_data.xlsx', sheet_name='Facebook_data')
     # for column in excel_data_df.columns.ravel():
-    #     print(column, ": " + str(excel_data_df[column].tolist()))
+    #print(column, ": " + str(excel_data_df[column].tolist()))
 
 
     # sublets.extend(facebook())
