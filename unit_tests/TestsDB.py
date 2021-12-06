@@ -1,20 +1,33 @@
 import datetime
+from copy import deepcopy
+
 
 class Test:
-    def __init__(self, text, start_date, end_date, price, location):
+    def __init__(self, post_time, text, start_date, end_date, price, location):
+        self.post_time: datetime = post_time
         self.text: str = text
         self.start_date: datetime = start_date
         self.end_date: datetime = end_date
         self.price: list(int) = price
         self.location: str = location
 
+
 class Tests:
-   def __init__(self):
-      self.tests = [test1, test2, test3, test4, test5, test6, test7, test8, test9, test10,
-                    test11, test12, test13, test14, test15, test16, test17, test18, test19, test20]
+    def __init__(self):
+        self.tests = [test1, test2, test3, test4, test5, test6, test7, test8, test9, test10,
+                      test11, test12, test13, test14, test15, test16, test17, test18, test19, test20,
+                      test21]
+
+    def dump_dates_to_test(self):
+        dates_tests = deepcopy(self.tests)
+        dates_tests.pop(20)  # TODO [AA] : add test after filtering out "1.5 rooms"
+        dates_tests.pop(17)  # TODO [AA] : add test after figuring out context
+        dates_tests.pop(6)  # TODO [AA] : add test after figuring out context
+        return [(test.text, test.start_date, test.end_date, test.post_time) for test in dates_tests]
 
 
 test1 = Test(
+    post_time=datetime.date(2021, 11, 14),
     text="סאבלט בשדה אליעזר 😊\nמסבלטים את הסטודיו שלנו.\nלמחפשים לטייל, לנוח או סתם להיות במקום שקט צמוד לטבע.\n"
          "בתאריך שבין v 15/11עד ה 28/11, הדירה שלנו פנויה..\n"
          "דירת סטודיו גדולה(52 מ') עם מרפסת מקורה שצופה על עמק החולה ורמת הגולן. מלא טבע וירוק.\n"
@@ -26,6 +39,7 @@ test1 = Test(
     location='שדה אליעזר')
 
 test2 = Test(
+    post_time=datetime.date(2021, 11, 15),
     text='וילה לסאבלט בחנוכה בין התאריכים 30.11-5.12 במושב שדה-אילן(2 דקות מצומת גולני)\n'
          'יפה מאוד! נקייה מאוד! מטבח כשר! חצר מטופחת עם פינות ישיבה..\n052-8316179',
     start_date=datetime.date(2021, 11, 30),
@@ -34,6 +48,7 @@ test2 = Test(
     location='שדה אילן')
 
 test3 = Test(
+    post_time=datetime.date(2021, 8, 28),
     text='מירית אמיר\n\u200f28 באוגוסט\u200f ב-\u200f9:08\u200f ·\n\n'
          'מקומות פנויים החל מה14 לנובמבר עד ה-29/11,מהרו להזמין מקומות אחרונים,יחידת נופש מהממת לזוג באילת.מחיר שווה .עם חצר פרטית.'
          '\nלפרטים 053-6576136.\n050-9939973',
@@ -43,6 +58,7 @@ test3 = Test(
     location='אילת')
 
 test4 = Test(
+    post_time=datetime.date(2021, 11, 10),
     text='אופק בגולן\n-בית קסום שהוא פינוק אמיתי-\nלזוגות בלבד\nבית קרקע באזור פסטורלי במושב רמות, עם חצר\n'
          'ענקית, פינת ישיבה בחוץ מתחת לפרגולה\nשני חדרי שינה וסלון עם ספה נפתחת, טלוויזיה בכל חדר'
          ', מטבח מאובזר כהלכה, מזגן בכל חדר שירותים, ומקלחת מפנקת ומדהימה.\nטל:0542545614\nhttps://oasraf.wixsite.com/ofekhouse'
@@ -53,6 +69,7 @@ test4 = Test(
     location='רמות')
 
 test5 = Test(
+    post_time=datetime.date(2021, 11, 11),
     text='#סאבלט_חנוכה 💫\n\nבהר הכי יפה בגליל-\nהר כמון ביישוב כמון 🌳\n\nמיום חמישי 2.12 עד יום ראשון 5.12\n\n'
          'כמה פרטים חשובים:\n💫 המטבח כשר\n💫 בבית גר חתול שנכנס ויוצא לסירוגין\n💫 יש כל מה שצריך לדתיים: פלטה ומיחם.\n'
          '💫 הבית יכול להכיל עד 8 אנשים\n💫 המיקום הכי שווה בצפון!\n\nלפרטים נוספים ומחירים-\nרק בוואטסאפ:\n052-3437718\n\nיום טוב 😊',
@@ -62,6 +79,7 @@ test5 = Test(
     location='כמון')
 
 test6 = Test(
+    post_time=datetime.date(2021, 11, 10),
     text='היי חברים\nמי שרוצה *סאבלט*\nבדירה מהממת בשכונת שפירא המפתחת,\n\nדירה מדהימה ברחוב בן אשר 7 ,\n'
          'במרחק הליכה מכם תוכלו ליהנות מפלורנטין ושוק לוינסקי'
          '!\n\nדירת סטודיו 20 מ"ר בערך.\n\nבדירה יש הכל !!\nהיא מרוהטת לגמרי עם אינטרנט, טלוויזיה חכמה וכל דבר שתצטרכו כדי שיהיה לכם הכי כיף בעולם'
@@ -72,15 +90,17 @@ test6 = Test(
     location='תל אביב')
 
 test7 = Test(
+    post_time=datetime.date(2021, 11, 11),
     text="מסאבלט את דירתי 🏠 המתוקה בטבעון ל-3 חודשים. כניסה מיידית."
          " 🧙מרפסת שווה, פרקט, מטבח מאובזר, מיקום מרכזי, שקט ומלא טבע פתוח לטייל בו במרחק הליכה(5-10 ד'). ממליץ בחום.",
 
-    start_date=datetime.date(2021, 11, 24), # TODO [AA] : grep כניסה מיידית
+    start_date=datetime.date(2021, 11, 24),  # TODO [AA] : grep כניסה מיידית
     end_date=datetime.date(2021, 2, 24),
     price=[],
-    location='קריית טבעון')
+    location='טבעון')
 
 test8 = Test(
+    post_time=datetime.date(2021, 11, 11),
     text='להשכרה סאבלט ל3 חודשים, מתאריך 22 .31.12.21-31.03, יפו ג, 7'
          ' דקות הליכה מחוף הסי פאלס, דקה הליכה ממרכז קניות ותחבורה ציבורית, איזור שקט, הדירה מרוהטת קומפלט, 50 מ"ר, מכונת כביסה, '
          'מחיר לחודש 3,700 שח כולל כל החשבונות ואינטרנט חוץ מחשמל, מתאים לדייר או דיירת, בלי בעלי חיים, פרטים בפרטי :)',
@@ -90,7 +110,8 @@ test8 = Test(
     location='יפו')
 
 test9 = Test(
-    text="SUBLET FOR 3 MONTHS \\\\ 1.5 ROOMS FLAT \\\\CITY CENTER 🌈☀🌷\n\n14\\\\ 11 \\\\21 - 09 \\\\ 02 \\\\ 22\n\n"
+    post_time=datetime.date(2021, 11, 12),
+    text="SUBLET FOR 3 MONTHS \\\\ 1.5 ROOMS FLAT \\\\CITY CENTER 🌈☀🌷\n\n14\\ 11 \\21 - 09 \\ 02 \\ 22\n\n"
          "Spacious 1.5 rooms basement apartment with lots of good vibes.\nFully furnished - comfortable double bed"
          ", SMART TV '55, WIFI, AC, equipped kitchen 😎\n\nA minute walk from Gan Meir, King George, Dizengoff square"
          ", Carmel Market, the Kerem and the beach.\nlocated on Zalman Shneur street.\nA quiet cozy place full of privacy"
@@ -108,6 +129,7 @@ test9 = Test(
     location='תל אביב')
 
 test10 = Test(
+    post_time=datetime.date(2021, 11, 13),
     text='מוזמנים אלינו לקיבוץ בית השיטה,\nליחידת אירוח מקסימה.\n'
          'במרכז עמק המעיינות ליד הסחנה, נחל האסי בסמיכות לנחל הקיבוצים.\nיחידת נופש נקיה ומסודרת\n'
          '✅ מתאימה לזוג/זוג+ילד\n✅ מיטה זוגית.\n✅ טלוויזיה ממיר פרטנר.\n✅ אינטרנט.\n✅ ממוזגת.\n'
@@ -119,6 +141,7 @@ test10 = Test(
     location='בית השיטה')
 
 test11 = Test(
+    post_time=datetime.date(2021, 11, 13),
     text='הוילה המפנקת שלנו ביישוב פסטוראלי בגלבוע פנויה בחנוכה בין ה 29-1 ו 5-6/12 פינת מנגל,טאבון ופינת מדורה, נופים קסומים. לפרטים 0523777810',
     start_date=datetime.date(2021, 12, 5),
     end_date=datetime.date(2021, 12, 6),
@@ -126,6 +149,7 @@ test11 = Test(
     location='')
 
 test12 = Test(
+    post_time=datetime.date(2021, 11, 15),
     text='היי מה שלומכם? :)\nמי שרוצה *סאבלט*\nבדירה מהממת ליד שוק התקווה,\n\nדירה מדהימה ברחוב ברכיה 22 ,\n'
          'במרחק הליכה מכם תוכלו ליהנות מהשוק המהמם, '
          'מבתי קפה ומסעדה מעולים במחירים מסובסדים, וכמובן לטייל וליהנות ברחוב האצ״ל, שידוע בתור רחוב מלא מקומות בילוי.\n\n'
@@ -138,6 +162,7 @@ test12 = Test(
     location='תל אביב')
 
 test13 = Test(
+    post_time=datetime.date(2021, 11, 13),
     text='סאבלט – דירה מדהימה בתל אביב על חוף הים!\nBeautiful apartment in Tel-Aviv on the beach!\n\n'
          'מסאבלט דירת 2 חדרים במתחם בית מנדרין (בית מלון לשעבר), קומה 8, צפון ת"א, רח\' יוניצמן 21,\n'
          'בתאריכים 20/11 - 16/11\n- מרפסת שמש ענקית לאורך כל הדירה עם נוף לים עוצר נשימה\n- חדר אמבטיה נפרד\n'
@@ -159,6 +184,7 @@ test13 = Test(
     location='תל אביב')
 
 test14 = Test(
+    post_time=datetime.date(2021, 11, 15),
     text='דופלקס על הים בעכו\nפנוי חמשושים(חמישי שישי שבת)\nבחנוכה פנוי מה2/12 עד ה10/12\nמתאים לזוג משפחה או קבוצה קטנה',
     start_date=datetime.date(2021, 12, 2),
     end_date=datetime.date(2021, 12, 10),
@@ -166,6 +192,7 @@ test14 = Test(
     location='עכו')
 
 test15 = Test(
+    post_time=datetime.date(2021, 11, 15),
     text='רעות פרג\'ון\n\u200f8 בנובמבר\u200f ב-\u200f22:23\u200f ·\n\nמפרסמת עבור חברים שלנו.\n\n'
          'חופשת חנוכה בעמק הכי יפה בעולם! עמק המעיינות- בית שאן'
          '.\n\nבתאריכים: כ"ז-ל\' כסליו (1-4/12/21)\n\nבית קו אחרון לנוף משגע! הליכה ברגל מהמפלים הלבנים! מרחק של דק\' '
@@ -177,6 +204,7 @@ test15 = Test(
     location='בית שאן')
 
 test16 = Test(
+    post_time=datetime.date(2021, 11, 15),
     text='הבית הצבעוני באניעם פתוח לחנוכה!!!\nאנחנו מפנים את הבית המפנק שלנו, שממוקם במרכז הגולן המושב אניעם, '
          'ל 12 יום רצוף!! החל מסוף השבוע ב 25 לנובמבר עד ל 6 בדצמבר נר שמיני.\n*פנוי עדיין 25-29 לנובמבר ו 4-6 לדצמבר '
          'למי שרוצה לטייל בגולן בימי החופשה.\nבית גדול שמתאים לשתיים שלוש משפחות ומותאם'
@@ -188,11 +216,12 @@ test16 = Test(
          'המחיר ללילה 1400 ש"ח (מינימום 2 לילות), הנחה למי שיקח 3 לילות ומעלה\n'
          'לתמונות נוספות, פרטים ושאלות\nגיא שקד\n0528544318\nבבקשה להתקשר או לשלוח וואטסאפ. המסנג\'ר לא מתקשר איתי בצורה מיטבית.',
     start_date=datetime.date(2021, 11, 25),
-    end_date=datetime.date(2021, 11, 29), # TODO [AA] : add 4-6.12 when changing start,end date into list
+    end_date=datetime.date(2021, 11, 29),  # TODO [AA] : add 4-6.12 when changing start,end date into list
     price=[1400],
     location='אניעם')
 
 test17 = Test(
+    post_time=datetime.date(2021, 11, 9),
     text='לספונטניים ומהירי החלטה!!!\nמסבלטת את דירתי הקסומה שממוקמת בנהריה על חוף הים בחמשו"ש הקרוב, 11-13.11.\n'
          'הדירה מתאימה לזוגות או יחידים בלבד.\nלפרטים נוספים אנא פנו בפרטי (לא תמיד רואה תגובות עמכם הסליחה)!',
     start_date=datetime.date(2021, 11, 11),
@@ -201,16 +230,18 @@ test17 = Test(
     location='נהריה')
 
 test18 = Test(
+    post_time=datetime.date(2021, 11, 15),
     text='סאבלט , דירת שני חדרים מקסימה בזיכרון יעקב\nמסבלטת את ביתי בקצה זיכרון\n'
          'הדירה מעוצבת ומרוהטת לחלוטין עם מטבח מאובזר ומרפסת שמשקיפה לנוף יפיפיה של רמת הנדיב והים.\n'
          'פנויה מה 1 לדצמבר למינמום של ארבעה עד שישה חודשים עם אופציה להארכה\n'
          'מחיר ללא חשבונות : 2800 ש"ח + 500 לועד בית (בניין נקי, שקט ומאובטח עם מעלית)\nלפרטים ויצירת קשר\nאניטה : 0586694555',
     start_date=datetime.date(2021, 12, 1),
     end_date=datetime.date(2022, 6, 1),
-    price=[2800],
+    price=[500,2800],
     location='זכרון יעקב')
 
 test19 = Test(
+    post_time=datetime.date(2021, 11, 15),
     text='אידיאלי לעובדים באיזור, למטיילי "ים אל ים", רוכבי אופניים ומשפחות מטיילים בגליל.\n'
          'בחיק הטבע בלב הגליל המערבי מעל שמורת נחל כזיב/עין חרדלית. לינה במבנה דום מיוחד בחורש טבעי. 400 ש"ח ללילה לעד 4 אורחים.'
          '\nהדום מתאים ללינה של עד 10 אורחים, בחלל התחתון ובגלריה.\n'
@@ -222,6 +253,7 @@ test19 = Test(
     location='כזיב')
 
 test20 = Test(
+    post_time=datetime.date(2021, 11, 15),
     text='*בית בחנוכה עם בריכה חמה בשבילכם!*\nאז שעון חורף איתנו, ואנחנו מתחילים להרגיש את חנוכה ואת מסע החורף שלנו!\nמה שאומר שהבית שלנו מתפנה בשבילכם'
          '!\nהבית שלנו נמצא במושב שתולה שבגליל המערבי, באחד האזורים היפים בארץ!\n'
          '5 חדרי שינה (מתוכם 3 יחידות הורים עם שירותים ומקלחת), סלון ומטבח מרווחים, חצר גדולה עם טרמפולינה.\n'
@@ -231,3 +263,11 @@ test20 = Test(
     end_date=datetime.date(2021, 12, 11),
     price=[1500, 2200],
     location='שתולה')
+
+test21 = Test(
+    post_time=datetime.date(2021, 11, 15),
+    text="SUBLET FOR 3 MONTHS \\\\ 1.5 ROOMS FLAT \\\\CITY CENTER",
+    start_date=None,
+    end_date=None,
+    price=None,
+    location='תל אביב')
