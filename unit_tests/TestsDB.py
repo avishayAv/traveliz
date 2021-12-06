@@ -271,3 +271,4 @@ test21 = Test(
     end_date=None,
     price=None,
     location='תל אביב')
+

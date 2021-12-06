@@ -13,7 +13,7 @@ def create_excel_for_tagging_data():
     a = pkl.load(open("list_of_sublets.p", "rb"))
     sublest = {}
     range_start, range_end = 0, 300
-    file_path = 'data_for_tagging.xlsx'
+    file_path = 'data_utils/data_for_tagging.xlsx'
     writer = pd.ExcelWriter(file_path, engine='openpyxl')
     for name in ["Eliya", "Shaya", "Sharvit", "Avishay"]:
         sublest[name] = a[range_start:range_end]
@@ -79,5 +79,5 @@ def create_excel_for_tagging_data():
         wb.save(file_path)
 
 
-def read_excel(name:str, file_name:str='data_for_tagging.xlsx'):
+def read_excel(name:str, file_name:str='data_utils/data_for_tagging.xlsx'):
     return pandas.read_excel(file_name, sheet_name=name)
