@@ -240,12 +240,6 @@
     "latt": 31.6789
   },
   {
-    "name": "אביעזר",
-    "english_name": "avi'ezer",
-    "long": 35.18496,
-    "latt": 31.73101
-  },
-  {
     "name": "אדמית",
     "english_name": "adamit",
     "long": 35.21141,
@@ -1422,7 +1416,7 @@
     "latt": 32.01516
   },
   {
-    "name": "בר יוחאי",
+    "name": "בר יוחאי, ירושלים",
     "english_name": "bar yohay",
     "long": 35.19862,
     "latt": 31.75425
@@ -2050,12 +2044,6 @@
     "english_name": "daliyat al-karmel",
     "long": 35.04834,
     "latt": 32.69266
-  },
-  {
-    "name": "דן",
-    "english_name": "dan",
-    "long": 35.22131,
-    "latt": 31.77284
   },
   {
     "name": "האון",
@@ -4068,8 +4056,8 @@
     "latt": 32.58308
   },
   {
-    "name": "מחנה יהודית",
-    "english_name": "",
+    "name": "מחנה יהודה",
+    "english_name": "Machne Yehuda",
     "long": 35.21079,
     "latt": 31.7858
   },
@@ -4434,7 +4422,7 @@
     "latt": 32.85258
   },
   {
-    "name": "מסדה",
+    "name": "מסדה, חיפה",
     "english_name": "massada",
     "long": 34.99388,
     "latt": 32.80948
@@ -5784,7 +5772,7 @@
     "latt": 33.00819
   },
   {
-    "name": "עין כרם-בי\"ס חקלאי",
+    "name": "עין כרם, ירושלים",
     "english_name": "en karem-b.s.haqla'i",
     "long": 35.16113,
     "latt": 31.7639
