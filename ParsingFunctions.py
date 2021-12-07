@@ -3,8 +3,9 @@ import json
 import re
 
 from DateParser import DatePatterns, DateReg
+from RoomsParser import RoomsParser
 from FacebookGroup import FacebookGroups
-from utils import remove_time_stamp_from_text
+from utils import remove_time_stamp_from_text, get_hebrew_to_real_number
 
 
 def searching_for_sublet(title, text):
@@ -144,10 +145,8 @@ class ParseLocation:
 
 
 # do not use datefinder - not working well with hebrew
-# TODO [AA] : return value should be list(start,end) and not just (start,end) - in case of multiple date options
 # TODO [AA] : think about grepping other fields. maybe title if exist?
 def extract_dates_from_text(text, post_time):
-    text = remove_time_stamp_from_text(text)
     dates = []
     for date_pattern in DatePatterns().patterns:
         dates_regex = [DateReg(x, date_pattern) for x in re.findall(date_pattern.pattern, text)]
@@ -157,7 +156,7 @@ def extract_dates_from_text(text, post_time):
         if (date_pattern.name.startswith('combined') and len(dates) >= 1) or len(dates) >= 2:
             break
 
-    if len(dates) == 0:  # TODO [AA] : handle empty case
+    if len(dates) == 0:
         return None, None
 
     # Prioritize ranged dates
@@ -170,3 +169,42 @@ def extract_dates_from_text(text, post_time):
         date.complete_year(post_time)
     dates = [inst.date for inst in dates]
     return min(dates), max(dates)
+
+
+def try_room_pattern_and_cleanup_text(room_pattern, text, convert_from_hebrew=False, living_room=None):
+    hebrew_to_real_number = get_hebrew_to_real_number()
+    rooms = re.findall(room_pattern, text)
+    living_room_exist = re.findall(living_room, text) if living_room else None
+    if len(rooms) > 0:
+        rooms = float(hebrew_to_real_number[rooms[0][0]]) if convert_from_hebrew else float(rooms[0][0])
+        rooms = rooms+1 if living_room_exist else rooms
+        masked_text = re.sub(room_pattern, '', text)
+        return rooms, masked_text
+    return None, None
+
+def extract_rooms_from_text(text):
+    text = remove_time_stamp_from_text(text)
+    rooms_parser = RoomsParser()
+
+    rooms, masked_text = try_room_pattern_and_cleanup_text(rooms_parser.total_rooms, text)
+    if rooms is not None:
+        return rooms, masked_text
+
+    rooms, masked_text = try_room_pattern_and_cleanup_text(rooms_parser.hebrew_total_rooms, text, True)
+    if rooms is not None:
+        return rooms, masked_text
+
+    rooms, masked_text = try_room_pattern_and_cleanup_text(rooms_parser.bed_rooms, text, False, rooms_parser.living_room)
+    if rooms is not None:
+        return rooms, masked_text
+
+    rooms, masked_text = try_room_pattern_and_cleanup_text(rooms_parser.hebrew_bed_rooms, text, True, rooms_parser.living_room)
+    if rooms is not None:
+        return rooms, masked_text
+
+    one_room_apt = re.findall(rooms_parser.one_room_apt, text)
+    rooms = float(1) if len(one_room_apt) > 0 else None
+    return rooms, text
+
+
+

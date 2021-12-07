@@ -11,6 +11,7 @@ class TestGroundTruth:
     price: [int] = None
     phone_number: [str] = None
     location: str = None
+    rooms: float = None
 
 
 @dataclass

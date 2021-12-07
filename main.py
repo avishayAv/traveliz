@@ -8,7 +8,7 @@ from FacebookGroup import FacebookGroups
 import random
 import os
 import json
-from AirbnbUtils import find_airbnb_listing_location, activate_venv_command,\
+from AirbnbUtils import find_airbnb_listing_location, activate_venv_command, \
     airbnb_scraper_dir_path, airbnb_data_path, list_of_locations
 from ParsingFunctions import *
 import numpy as np
@@ -57,17 +57,24 @@ def parse_data_from_facebook(dict_of_sublets):
         assert post_text is not None
         post_url = sublet['post_url']
         post_time = sublet['time']
-        start_date, end_date = extract_dates_from_text(post_text,post_time)
-        location = parse_location(post_title, post_text, group_id,listing_location=sublet['listing_location'] if 'listing_location' in sublet else None)
-        rooms = 0  # TODO : parse rooms from text
-        phones,masked_text = parse_phone_number(post_title, post_text)
-        prices = parse_price(masked_text,listing_price=sublet['listing_price'] if 'listing_price' in sublet else None)
+        end_date, rooms, start_date = parse_rooms_and_dates_from_facebook(post_text, post_time)
+        location = parse_location(post_title, post_text, group_id,
+                                  listing_location=sublet['listing_location'] if 'listing_location' in sublet else None)
+        phones, masked_text = parse_phone_number(post_title, post_text)
+        prices = parse_price(masked_text, listing_price=sublet['listing_price'] if 'listing_price' in sublet else None)
         max_people = 0  # TODO : parse max_people from text
+
         images = sublet['images']
         sublets.append(
             Facebook(post_url, location, prices, max_people, images, rooms,
                      post_time, start_date, end_date, phones))
     return sublets
+
+
+def parse_rooms_and_dates_from_facebook(post_text, post_time):
+    rooms, masked_text = extract_rooms_from_text(post_text)
+    start_date, end_date = extract_dates_from_text(masked_text, post_time)
+    return end_date, rooms, start_date
 
 
 def airbnb_scraper():
@@ -111,7 +118,7 @@ def parse_airbnb_data(json_file_path: str):
         name = listing['name']
         post_url = listing['url']
         area = json_file_path.split('/')[-1].split(".")[0]
-        location = " ".join([find_airbnb_listing_location(listing["longitude"], listing["latitude"])+',', area])
+        location = " ".join([find_airbnb_listing_location(listing["longitude"], listing["latitude"]) + ',', area])
         description = listing['description']
         rating = listing['rating_value']
         reviews = listing['reviews']
@@ -119,9 +126,9 @@ def parse_airbnb_data(json_file_path: str):
         amenities = listing['amenities']
         max_people = listing['person_capacity']
         prices = listing['price_rate']
-        rooms = listing["bedrooms"]# if listing["bedrooms"] != 0 else None,
-        bathrooms = listing["bathrooms"]# if listing["bathrooms"] != 0 else None,
-        beds = listing["beds"]# if listing["beds"] != 0 else None,
+        rooms = listing["bedrooms"]  # if listing["bedrooms"] != 0 else None,
+        bathrooms = listing["bathrooms"]  # if listing["bathrooms"] != 0 else None,
+        beds = listing["beds"]  # if listing["beds"] != 0 else None,
         airbnb_listings.append(
             Airbnb(post_url, location, prices, max_people, images, rooms,
                    name, description, rating, reviews, amenities, bathrooms, beds))
@@ -136,19 +143,18 @@ def facebook():
     #     pickle.dump(dict_of_sublets, open('dict_of_sublets.p', 'wb'))
     return parse_data_from_facebook(dict_of_sublets)
 
+
 def parse_data_from_whatsapp(data):
     parse_location = ParseLocation()
-    group_to_location = {'סאבלט בדפנה':'דפנה'}
+    group_to_location = {'סאבלט בדפנה': 'דפנה'}
     for group_name, messages_per_date in data.items():
         for date1, messages in messages_per_date.items():
             for message in messages:
-                post_time = datetime.datetime.strptime(date1+'/'+message['time'],'%m/%d/%Y/%I:%M %p')
-                price = parse_price(message['text'],None,None)
-                location = parse_location(text=message['text'],title=None,group_id=None,listing_location=group_to_location[group_name])
+                post_time = datetime.datetime.strptime(date1 + '/' + message['time'], '%m/%d/%Y/%I:%M %p')
+                price = parse_price(message['text'], None, None)
+                location = parse_location(text=message['text'], title=None, group_id=None,
+                                          listing_location=group_to_location[group_name])
                 phone = message['sender']
-
-
-
 
 
 def whatsapp():
@@ -157,20 +163,16 @@ def whatsapp():
     parse_data_from_whatsapp(data)
 
 
-
-
-
 def main():
     # airbnb_scraper()
     # airbnb_listings = airbnb_read_data_from_json()
     # sublets = []
-    #ws['A1'] = a[2]['text']
+    # ws['A1'] = a[2]['text']
     posts_dict = read_excel_end_create_dict_of_tagged_data(name="facebook_posts_1")
     y = 5
     # excel_data_df = pd.read_excel('/Users/eliyasegev/Desktop/Tagged_data.xlsx', sheet_name='Facebook_data')
     # for column in excel_data_df.columns.ravel():
-    #print(column, ": " + str(excel_data_df[column].tolist()))
-
+    # print(column, ": " + str(excel_data_df[column].tolist()))
 
     # sublets.extend(facebook())
     pass
