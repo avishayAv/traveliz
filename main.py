@@ -60,9 +60,9 @@ def parse_data_from_facebook(dict_of_sublets):
         start_date, end_date = extract_dates_from_text(post_text,post_time)
         location = parse_location(post_title, post_text, group_id,listing_location=sublet['listing_location'] if 'listing_location' in sublet else None)
         rooms = 0  # TODO : parse rooms from text
-        prices = parse_price(post_title,post_text,listing_price=sublet['listing_price'] if 'listing_price' in sublet else None)
+        phones,masked_text = parse_phone_number(post_title, post_text)
+        prices = parse_price(masked_text,listing_price=sublet['listing_price'] if 'listing_price' in sublet else None)
         max_people = 0  # TODO : parse max_people from text
-        phones = parse_phone_number(post_title, post_text)  # TODO : parse phone from text
         images = sublet['images']
         sublets.append(
             Facebook(post_url, location, prices, max_people, images, rooms,

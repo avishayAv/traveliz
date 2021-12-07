@@ -17,12 +17,14 @@ def parse_phone_number(title, text):
     text = title + text
     text.replace('+972', '0')
     pattern = r'\d{3}-?[0-9]+-?[0-9]+-?[0-9]+'
-    for match in re.findall(pattern, text):
-        phones.append(match)
-    return phones
+    masked_text = text
+    for match in re.finditer(pattern, text):
+        phones.append(text[match.start():match.end()].replace('972','0').replace('-',''))
+        masked_text = text[:match.start()] + text[match.end():]
+    return phones, masked_text
 
 
-def parse_price(title, text, listing_price):
+def parse_price(text, listing_price):
     def get_symbol(word):
         shekel_pattern = r'₪|שקל|ils|ש"ח'
         dollar_pattern = r'\$|דולר|Dollar'
@@ -34,18 +36,14 @@ def parse_price(title, text, listing_price):
     def find_description(word):
         return word.replace(',', '')
 
-    pattern = r'\D[1-9],?\d{2,3}\D'
+    pattern = r'\D[1-9],?\d{1,2}0\D'
     meter_pattern = r'מ"ר|מר|מטר'
     if listing_price is not None:
         text = listing_price
-    else:
-        text = title + text
     text = re.sub("\s+|\(|\)", " ", text)
-    text = re.sub("\+972", "0", text)
     text = re.sub("2021", "", text)
     text = re.sub("2022", "", text)
-    for match in re.finditer(r"\D\d{3,4}-\d{3,4}\D", text):
-        text = text[:match.start()] + text[match.start():match.end()].replace('-','  ') + text[match.end():]
+    text+= ' '
     words = text.split() + ['', '']  # avoid index error
     prices = {}
     price_to_symbol = {}
@@ -90,7 +88,9 @@ class ParseLocation:
         def clean_and_match(sub_text, decrease=0.0, similarity_th=0.85):
             res = match(sub_text, similarity_th, decrease=0 + decrease)
             if sub_text.startswith('ב'):
-                res += match(sub_text[1:], similarity_th, decrease=-0.05 + decrease)
+                res += match(sub_text[1:], similarity_th, decrease=-0.03 + decrease)
+            elif sub_text.startswith('שב'):
+                res += match(sub_text[1:], similarity_th, decrease=-0.07 + decrease)
             return res
 
         def match(sub_text, similarity_th=0.85, decrease=0.0):

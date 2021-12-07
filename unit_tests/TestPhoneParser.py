@@ -5,7 +5,7 @@ from pathlib import Path
 from tqdm import tqdm
 
 from TestsDB import Tests
-from ParsingFunctions import ParseLocation
+from ParsingFunctions import ParseLocation, parse_phone_number
 
 
 class TestLocationParser(unittest.TestCase):
@@ -13,8 +13,12 @@ class TestLocationParser(unittest.TestCase):
         os.chdir(Path(os.getcwd()).parent)
         parse_location = ParseLocation()
         for i, test in tqdm(enumerate(Tests().tests)):
-            location = parse_location(test.raw_input.title, test.raw_input.text, listing_location=test.raw_input.location, group_id=test.raw_input.group_id)
-            self.assertEqual(location, test.gt.location)
+            numbers = parse_phone_number(test.raw_input.title, test.raw_input.text)[0]
+            if not numbers:
+                numbers = None
+
+            self.assertEqual(numbers, test.gt.phone_number)
+
 
 
 if __name__ == '__main__':
