@@ -3,13 +3,14 @@ from copy import deepcopy
 
 
 class Test:
-    def __init__(self, post_time, text, start_date, end_date, price, location):
+    def __init__(self, post_time, text, start_date, end_date, price, location, rooms):
         self.post_time: datetime = post_time
         self.text: str = text
         self.start_date: datetime = start_date
         self.end_date: datetime = end_date
         self.price: list(int) = price
         self.location: str = location
+        self.rooms: float = rooms
 
 
 class Tests:
@@ -20,10 +21,13 @@ class Tests:
 
     def dump_dates_to_test(self):
         dates_tests = deepcopy(self.tests)
-        dates_tests.pop(20)  # TODO [AA] : add test after filtering out "1.5 rooms"
         dates_tests.pop(17)  # TODO [AA] : add test after figuring out context
         dates_tests.pop(6)  # TODO [AA] : add test after figuring out context
         return [(test.text, test.start_date, test.end_date, test.post_time) for test in dates_tests]
+
+    def dump_rooms_to_test(self):
+        rooms_tests = deepcopy(self.tests)
+        return [(test.text, test.rooms) for test in rooms_tests]
 
 
 test1 = Test(
@@ -36,7 +40,8 @@ test1 = Test(
     start_date=datetime.date(2021, 11, 15),
     end_date=datetime.date(2021, 11, 28),
     price=[300],
-    location='שדה אליעזר')
+    location='שדה אליעזר',
+    rooms=1)
 
 test2 = Test(
     post_time=datetime.date(2021, 11, 15),
@@ -45,7 +50,8 @@ test2 = Test(
     start_date=datetime.date(2021, 11, 30),
     end_date=datetime.date(2021, 12, 5),
     price=[],
-    location='שדה אילן')
+    location='שדה אילן',
+    rooms=None)
 
 test3 = Test(
     post_time=datetime.date(2021, 8, 28),
@@ -55,7 +61,8 @@ test3 = Test(
     start_date=datetime.date(2021, 11, 14),
     end_date=datetime.date(2021, 11, 29),
     price=[],
-    location='אילת')
+    location='אילת',
+    rooms=1)
 
 test4 = Test(
     post_time=datetime.date(2021, 11, 10),
@@ -66,7 +73,8 @@ test4 = Test(
     start_date=None,
     end_date=None,
     price=[450, 600],
-    location='רמות')
+    location='רמות',
+    rooms=3)
 
 test5 = Test(
     post_time=datetime.date(2021, 11, 11),
@@ -76,7 +84,8 @@ test5 = Test(
     start_date=datetime.date(2021, 12, 2),
     end_date=datetime.date(2021, 12, 5),
     price=[],
-    location='כמון')
+    location='כמון',
+    rooms=None)
 
 test6 = Test(
     post_time=datetime.date(2021, 11, 10),
@@ -87,7 +96,8 @@ test6 = Test(
     start_date=None,
     end_date=None,
     price=[3800],
-    location='תל אביב')
+    location='תל אביב',
+    rooms=1)
 
 test7 = Test(
     post_time=datetime.date(2021, 11, 11),
@@ -97,7 +107,8 @@ test7 = Test(
     start_date=datetime.date(2021, 11, 24),  # TODO [AA] : grep כניסה מיידית
     end_date=datetime.date(2021, 2, 24),
     price=[],
-    location='טבעון')
+    location='טבעון',
+    rooms=None)
 
 test8 = Test(
     post_time=datetime.date(2021, 11, 11),
@@ -107,7 +118,8 @@ test8 = Test(
     start_date=datetime.date(2021, 12, 31),
     end_date=datetime.date(2022, 3, 31),
     price=[3700],
-    location='יפו')
+    location='יפו',
+    rooms=None)
 
 test9 = Test(
     post_time=datetime.date(2021, 11, 12),
@@ -126,7 +138,8 @@ test9 = Test(
     start_date=datetime.date(2021, 11, 14),
     end_date=datetime.date(2022, 2, 9),
     price=[5000],
-    location='תל אביב')
+    location='תל אביב',
+    rooms=1.5)
 
 test10 = Test(
     post_time=datetime.date(2021, 11, 13),
@@ -138,7 +151,8 @@ test10 = Test(
     start_date=None,
     end_date=None,
     price=[],
-    location='בית השיטה')
+    location='בית השיטה',
+    rooms=1)
 
 test11 = Test(
     post_time=datetime.date(2021, 11, 13),
@@ -146,7 +160,8 @@ test11 = Test(
     start_date=datetime.date(2021, 12, 5),
     end_date=datetime.date(2021, 12, 6),
     price=[],
-    location='')
+    location='',
+    rooms=None)
 
 test12 = Test(
     post_time=datetime.date(2021, 11, 15),
@@ -159,7 +174,8 @@ test12 = Test(
     start_date=None,
     end_date=None,
     price=[4500],
-    location='תל אביב')
+    location='תל אביב',
+    rooms=2)
 
 test13 = Test(
     post_time=datetime.date(2021, 11, 13),
@@ -181,7 +197,8 @@ test13 = Test(
     start_date=datetime.date(2021, 11, 16),
     end_date=datetime.date(2021, 11, 20),
     price=[350, 490],
-    location='תל אביב')
+    location='תל אביב',
+    rooms=2)
 
 test14 = Test(
     post_time=datetime.date(2021, 11, 15),
@@ -189,7 +206,8 @@ test14 = Test(
     start_date=datetime.date(2021, 12, 2),
     end_date=datetime.date(2021, 12, 10),
     price=[],
-    location='עכו')
+    location='עכו',
+    rooms=None)
 
 test15 = Test(
     post_time=datetime.date(2021, 11, 15),
@@ -201,7 +219,8 @@ test15 = Test(
     start_date=datetime.date(2021, 12, 1),
     end_date=datetime.date(2021, 12, 4),
     price=[],
-    location='בית שאן')
+    location='בית שאן',
+    rooms=7)
 
 test16 = Test(
     post_time=datetime.date(2021, 11, 15),
@@ -218,7 +237,8 @@ test16 = Test(
     start_date=datetime.date(2021, 11, 25),
     end_date=datetime.date(2021, 11, 29),  # TODO [AA] : add 4-6.12 when changing start,end date into list
     price=[1400],
-    location='אניעם')
+    location='אניעם',
+    rooms=4)
 
 test17 = Test(
     post_time=datetime.date(2021, 11, 9),
@@ -227,7 +247,8 @@ test17 = Test(
     start_date=datetime.date(2021, 11, 11),
     end_date=datetime.date(2021, 11, 13),
     price=[],
-    location='נהריה')
+    location='נהריה',
+    rooms=None)
 
 test18 = Test(
     post_time=datetime.date(2021, 11, 15),
@@ -238,7 +259,8 @@ test18 = Test(
     start_date=datetime.date(2021, 12, 1),
     end_date=datetime.date(2022, 6, 1),
     price=[500,2800],
-    location='זכרון יעקב')
+    location='זכרון יעקב',
+    rooms=2)
 
 test19 = Test(
     post_time=datetime.date(2021, 11, 15),
@@ -250,7 +272,8 @@ test19 = Test(
     start_date=None,
     end_date=None,
     price=[400],
-    location='כזיב')
+    location='כזיב',
+    rooms=None)
 
 test20 = Test(
     post_time=datetime.date(2021, 11, 15),
@@ -262,7 +285,8 @@ test20 = Test(
     start_date=datetime.date(2021, 11, 25),
     end_date=datetime.date(2021, 12, 11),
     price=[1500, 2200],
-    location='שתולה')
+    location='שתולה',
+    rooms=6)
 
 test21 = Test(
     post_time=datetime.date(2021, 11, 15),
@@ -270,5 +294,6 @@ test21 = Test(
     start_date=None,
     end_date=None,
     price=None,
-    location='תל אביב')
+    location='תל אביב',
+    rooms=1.5)
 

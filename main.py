@@ -57,17 +57,22 @@ def parse_data_from_facebook(dict_of_sublets):
         assert post_text is not None
         post_url = sublet['post_url']
         post_time = sublet['time']
-        start_date, end_date = extract_dates_from_text(post_text,post_time)
+        end_date, rooms, start_date = parse_rooms_and_dates_from_facebook(post_text, post_time)
         location = parse_location(post_title, post_text, group_id,listing_location=sublet['listing_location'] if 'listing_location' in sublet else None)
-        rooms = 0  # TODO : parse rooms from text
         prices = parse_price(post_title,post_text,listing_price=sublet['listing_price'] if 'listing_price' in sublet else None)
         max_people = 0  # TODO : parse max_people from text
-        phones = parse_phone_number(post_title, post_text)  # TODO : parse phone from text
+        phones = parse_phone_number(post_title, post_text)
         images = sublet['images']
         sublets.append(
             Facebook(post_url, location, prices, max_people, images, rooms,
                      post_time, start_date, end_date, phones))
     return sublets
+
+
+def parse_rooms_and_dates_from_facebook(post_text, post_time):
+    rooms, masked_text = extract_rooms_from_text(post_text)
+    start_date, end_date = extract_dates_from_text(masked_text, post_time)
+    return end_date, rooms, start_date
 
 
 def airbnb_scraper():
