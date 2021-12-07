@@ -6,8 +6,8 @@ from dataclasses import dataclass
 
 @dataclass
 class TestGroundTruth:
-    start_date: datetime = None
-    end_date: datetime = None
+    start_date: datetime.date = None
+    end_date: datetime.date = None
     price: [int] = None
     phone_number: [str] = None
     location: str = None
@@ -50,5 +50,9 @@ class Tests:
 
     def dump_dates_to_test(self):
         dates_tests = deepcopy(self.tests)
-        return [(test.raw_input.text, test.gt.start_date, test.gt.end_date, test.raw_input.post_time) for test in dates_tests]
+        return [(test.raw_input.text, test.gt.start_date, test.gt.end_date, test.raw_input.post_time.date()) for test in
+                dates_tests]
 
+    def dump_rooms_to_test(self):
+        rooms_tests = deepcopy(self.tests)
+        return [(test.raw_input.text, test.gt.rooms) for test in rooms_tests]

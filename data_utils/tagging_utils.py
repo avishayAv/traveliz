@@ -1,17 +1,18 @@
-from datetime import datetime
-import pandas as pd
 import pickle as pkl
+from datetime import datetime
 from typing import Optional
-import pandas
+
 import numpy
-from openpyxl.styles.differential import DifferentialStyle
-from openpyxl.formatting.rule import Rule
+import pandas
+import pandas as pd
 from openpyxl import load_workbook
-from openpyxl.styles import PatternFill, Font
 from openpyxl.formatting.rule import FormulaRule
+from openpyxl.formatting.rule import Rule
+from openpyxl.styles import PatternFill, Font
+from openpyxl.styles.differential import DifferentialStyle
 
 from ParsingFunctions import searching_for_sublet
-from unit_tests.TestsDB import TestGroundTruth, TestRawInput, Test, Tests
+from unit_tests.TestsDB import TestGroundTruth, TestRawInput, Test
 
 
 def create_pkl_for_test():
@@ -40,6 +41,7 @@ def create_excel_for_tagging_data():
         price = ["price" for x in post_id]
         location = ["location" for x in post_id]
         phone_number = ["phone_number" for x in post_id]
+        rooms = ["rooms" for x in post_id]
 
         # Create some Pandas dataframes from some data.
         from styleframe import StyleFrame
@@ -50,7 +52,8 @@ def create_excel_for_tagging_data():
                             'End_date': end_date,
                             'Price': price,
                             'Location': location,
-                            'Phone_number': phone_number})
+                            'Phone_number': phone_number,
+                            "Rooms": rooms})
         name = "facebook_posts" + '_' + str(i + 1)
         StyleFrame(df1).to_excel(writer, sheet_name=name).save()
         start_idx += 100
@@ -63,12 +66,14 @@ def create_excel_for_tagging_data():
     rule3 = Rule(type="containsText", operator="containsText", text="price", dxf=dxf)
     rule4 = Rule(type="containsText", operator="containsText", text="location", dxf=dxf)
     rule5 = Rule(type="containsText", operator="containsText", text="phone_number", dxf=dxf)
+    rule6 = Rule(type="containsText", operator="containsText", text="rooms", dxf=dxf)
 
     rule1.formula = ['NOT(ISERROR(SEARCH("start_date",C2)))']
     rule2.formula = ['NOT(ISERROR(SEARCH("end_date",D2)))']
     rule3.formula = ['NOT(ISERROR(SEARCH("price",E2)))']
     rule4.formula = ['NOT(ISERROR(SEARCH("location",F2)))']
     rule5.formula = ['NOT(ISERROR(SEARCH("phone_number",G2)))']
+    rule6.formula = ['NOT(ISERROR(SEARCH("rooms",H2)))']
 
     wb = load_workbook(file_path)
     yellowFill = PatternFill(start_color='00FFFF00', end_color='00FFFF00', fill_type='solid')
@@ -79,13 +84,15 @@ def create_excel_for_tagging_data():
         ws.conditional_formatting.add('E2:E101', rule3)
         ws.conditional_formatting.add('F2:F101', rule4)
         ws.conditional_formatting.add('G2:G101', rule5)
+        ws.conditional_formatting.add('H2:H101', rule6)
         ws.conditional_formatting.add('C1:C101', FormulaRule(formula=['ISBLANK(C1)'], stopIfTrue=True, fill=yellowFill))
         ws.conditional_formatting.add('D1:D101', FormulaRule(formula=['ISBLANK(D1)'], stopIfTrue=True, fill=yellowFill))
         ws.conditional_formatting.add('E1:E101', FormulaRule(formula=['ISBLANK(E1)'], stopIfTrue=True, fill=yellowFill))
         ws.conditional_formatting.add('F1:F101', FormulaRule(formula=['ISBLANK(F1)'], stopIfTrue=True, fill=yellowFill))
         ws.conditional_formatting.add('G1:G101', FormulaRule(formula=['ISBLANK(G1)'], stopIfTrue=True, fill=yellowFill))
+        ws.conditional_formatting.add('H1:H101', FormulaRule(formula=['ISBLANK(H1)'], stopIfTrue=True, fill=yellowFill))
 
-        for column in [ws['C'], ws['D'], ws['E'], ws['F'], ws['G']]:
+        for column in [ws['C'], ws['D'], ws['E'], ws['F'], ws['G'], ws['H']]:
             for cell in column:
                 cell.fill = PatternFill(start_color='0000FF00', end_color='0000FF00', fill_type='solid')
 
@@ -94,11 +101,12 @@ def create_excel_for_tagging_data():
         ws['E1'].fill = PatternFill(start_color='00FFFFFF', end_color='00FFFFFF', fill_type='solid')
         ws['F1'].fill = PatternFill(start_color='00FFFFFF', end_color='00FFFFFF', fill_type='solid')
         ws['G1'].fill = PatternFill(start_color='00FFFFFF', end_color='00FFFFFF', fill_type='solid')
+        ws['H1'].fill = PatternFill(start_color='00FFFFFF', end_color='00FFFFFF', fill_type='solid')
         ws.column_dimensions['A'].width = 20
         ws.column_dimensions['B'].width = 100
         ws.column_dimensions['B'].heigth = 400
         for column in [ws.column_dimensions['C'], ws.column_dimensions['D'], ws.column_dimensions['E'],
-                       ws.column_dimensions['F'], ws.column_dimensions['G']]:
+                       ws.column_dimensions['F'], ws.column_dimensions['G'], ws.column_dimensions['H']]:
             column.width = 20
 
         wb.save(file_path)
@@ -117,8 +125,9 @@ def read_excel(file_name: str, name: str):
 def create_tests_from_tagged_excel():
     def add_zero(x):
         if x[0] != '0':
-            return '0'+x
+            return '0' + x
         return x
+
     def date_str_to_datetime(date_str):
         if type(date_str) == datetime:
             date_str = date_str.strftime('%m/%d/%Y')
@@ -134,7 +143,7 @@ def create_tests_from_tagged_excel():
             m = '0' + m
         if len(y) == 2:
             y = '20' + y
-        return datetime.strptime('/'.join([d, m, y]), '%d/%m/%Y')
+        return datetime.strptime('/'.join([d, m, y]), '%d/%m/%Y').date()
 
     tagged_data_df = read_excel_and_create_tagged_df()
     tagged_data_df = tagged_data_df.where(pd.notnull(tagged_data_df), None)
@@ -161,13 +170,18 @@ def create_tests_from_tagged_excel():
 
         start_date = date_str_to_datetime(tagged_item['Start_date'])
         end_date = date_str_to_datetime(tagged_item['End_date'])
+        rooms = tagged_item['Rooms']
+        if type(rooms) in [int, float]:
+            rooms = float(rooms)
+        else:
+            rooms = None
         location = tagged_item['Location']
         if 'location' in location:
             location = None
         gt = TestGroundTruth(start_date=start_date,
                              end_date=end_date,
                              price=price, location=location,
-                             phone_number=phone_number)
+                             phone_number=phone_number, rooms=rooms)
         raw_input = TestRawInput(group_id=post['group_id'], location=post.get('location'),
                                  post_id=post['post_id'], price=post.get('price'),
                                  text=post['text'], title=post.get('title', ''),
@@ -175,7 +189,7 @@ def create_tests_from_tagged_excel():
         test = Test(gt=gt, raw_input=raw_input)
         if test.is_test_tagged():
             tests_db.append(test)
-    pkl.dump(tests_db, open('test_db.p', 'wb'))
+    pkl.dump(tests_db, open('unit_tests/test_db.p', 'wb'))
 
 
 if __name__ == '__main__':
