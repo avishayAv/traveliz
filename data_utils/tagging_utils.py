@@ -28,6 +28,8 @@ def create_excel_for_tagging_data():
         end_date = ["end_date" for x in post_id]
         price = ["price" for x in post_id]
         location = ["location" for x in post_id]
+        phone_number = ["phone_number" for x in post_id]
+
         # Create some Pandas dataframes from some data.
         from styleframe import StyleFrame
     # Create some Pandas dataframes from some data.
@@ -36,7 +38,8 @@ def create_excel_for_tagging_data():
                             'Start_date': start_date,
                             'End_date': end_date,
                             'Price': price,
-                            'Location': location})
+                            'Location': location,
+                            'Phone_number': phone_number})
         name = "facebook_posts" + '_' + str(i+1)
         StyleFrame(df1).to_excel(writer, sheet_name=name).save()
         start_idx += 100
@@ -48,12 +51,14 @@ def create_excel_for_tagging_data():
     rule2 = Rule(type="containsText", operator="containsText", text="end_date", dxf=dxf)
     rule3 = Rule(type="containsText", operator="containsText", text="price", dxf=dxf)
     rule4 = Rule(type="containsText", operator="containsText", text="location", dxf=dxf)
-
+    rule5 = Rule(type="containsText", operator="containsText", text="phone_number", dxf=dxf)
 
     rule1.formula = ['NOT(ISERROR(SEARCH("start_date",C2)))']
     rule2.formula = ['NOT(ISERROR(SEARCH("end_date",D2)))']
     rule3.formula = ['NOT(ISERROR(SEARCH("price",E2)))']
     rule4.formula = ['NOT(ISERROR(SEARCH("location",F2)))']
+    rule5.formula = ['NOT(ISERROR(SEARCH("phone_number",G2)))']
+
     wb = load_workbook(file_path)
     yellowFill = PatternFill(start_color='00FFFF00',end_color = '00FFFF00',fill_type = 'solid')
 
@@ -62,24 +67,27 @@ def create_excel_for_tagging_data():
         ws.conditional_formatting.add('D2:D101', rule2)
         ws.conditional_formatting.add('E2:E101', rule3)
         ws.conditional_formatting.add('F2:F101', rule4)
+        ws.conditional_formatting.add('G2:G101', rule5)
         ws.conditional_formatting.add('C1:C101', FormulaRule(formula=['ISBLANK(C1)'], stopIfTrue=True, fill=yellowFill))
         ws.conditional_formatting.add('D1:D101', FormulaRule(formula=['ISBLANK(D1)'], stopIfTrue=True, fill=yellowFill))
         ws.conditional_formatting.add('E1:E101', FormulaRule(formula=['ISBLANK(E1)'], stopIfTrue=True, fill=yellowFill))
         ws.conditional_formatting.add('F1:F101', FormulaRule(formula=['ISBLANK(F1)'], stopIfTrue=True, fill=yellowFill))
+        ws.conditional_formatting.add('G1:G101', FormulaRule(formula=['ISBLANK(G1)'], stopIfTrue=True, fill=yellowFill))
 
-        for collumn in [ws['C'], ws['D'], ws['E'], ws['F']]:
-            for cell in collumn:
+        for column in [ws['C'], ws['D'], ws['E'], ws['F'], ws['G']]:
+            for cell in column:
                     cell.fill = PatternFill(start_color='0000FF00', end_color='0000FF00', fill_type='solid')
 
         ws['C1'].fill = PatternFill(start_color='00FFFFFF', end_color='00FFFFFF', fill_type='solid')
         ws['D1'].fill = PatternFill(start_color='00FFFFFF', end_color='00FFFFFF', fill_type='solid')
         ws['E1'].fill = PatternFill(start_color='00FFFFFF', end_color='00FFFFFF', fill_type='solid')
         ws['F1'].fill = PatternFill(start_color='00FFFFFF', end_color='00FFFFFF', fill_type='solid')
+        ws['G1'].fill = PatternFill(start_color='00FFFFFF', end_color='00FFFFFF', fill_type='solid')
         ws.column_dimensions['A'].width = 20
         ws.column_dimensions['B'].width = 100
         ws.column_dimensions['B'].heigth = 400
-        for collumn in [ws.column_dimensions['C'], ws.column_dimensions['D'], ws.column_dimensions['E'], ws.column_dimensions['F']]:
-            collumn.width = 20
+        for column in [ws.column_dimensions['C'], ws.column_dimensions['D'], ws.column_dimensions['E'], ws.column_dimensions['F'], ws.column_dimensions['G']]:
+            column.width = 20
 
         wb.save(file_path)
 
@@ -99,5 +107,7 @@ def get_dict_of_tagged_data(df):
                       'start_date': df['Start_date'].tolist(),
                       'end_date': df['End_date'].tolist(),
                       'price': df['Price'].tolist(),
-                      'location': df['Location'].tolist()}
+                      'location': df['Location'].tolist(),
+                      'phone_number': df['Phone_number'].tolist(),
+                      }
     return posts_data_dict
