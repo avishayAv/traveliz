@@ -22,7 +22,7 @@ class Facebook(Sublet):
         self.end_date = end_date
         self.phones = phones
 
-
+# TODO [ES] : add availability
 class Airbnb(Sublet):
     def __init__(self, post_url, location, price, max_people, images, rooms,
                  name: str, description: str, rating: Optional[int], reviews: Optional[list],

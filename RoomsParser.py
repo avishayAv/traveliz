@@ -5,6 +5,8 @@ def allow_multiple_string_options(keywords):
 
 class RoomsParser:
     def __init__(self):
+        # TODO [AA] : CHANGE d.d to d.5
+        # TODO [AA] : make sure that after חדרי, there is no letter
         self.total_rooms = "(\d*\.\d+|\d+)\s+" + self.get_total_rooms_keywords()
         self.hebrew_total_rooms = self.get_hebrew_number_of_rooms() + "\s+" + self.get_total_rooms_keywords()
         self.bed_rooms = "(\d*\.\d+|\d+)\s+" + self.get_rooms_without_livingroom_keywords()

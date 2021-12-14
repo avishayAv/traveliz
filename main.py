@@ -76,7 +76,7 @@ def parse_rooms_and_dates_from_facebook(post_text, post_time):
     start_date, end_date = extract_dates_from_text(masked_text, post_time)
     return end_date, rooms, start_date
 
-
+# TODO [ES] : change dates to latest
 def airbnb_scraper():
     for location in list_of_locations:
         assert len(location) == 2, f"location field is {location}, should be [<city, country>, <name of json file>]"
@@ -150,6 +150,8 @@ def parse_data_from_whatsapp(data):
     for group_name, messages_per_date in data.items():
         for date1, messages in messages_per_date.items():
             for message in messages:
+                # TODO [YG + AA] : parse common fields together with facebook
+                # TODO [YG] : parse images by phone number
                 post_time = datetime.datetime.strptime(date1 + '/' + message['time'], '%m/%d/%Y/%I:%M %p')
                 price = parse_price(message['text'], None, None)
                 location = parse_location(text=message['text'], title=None, group_id=None,

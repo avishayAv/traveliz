@@ -6,7 +6,7 @@ from DateParser import DatePatterns, DateReg
 from RoomsParser import RoomsParser
 from FacebookGroup import FacebookGroups
 from utils import remove_time_stamp_from_text, get_hebrew_to_real_number
-
+# TODO [AA + YG] : refactor + standartize
 
 def searching_for_sublet(title, text):
     pattern = 'מחפש'
@@ -42,6 +42,7 @@ def parse_price(text, listing_price):
     if listing_price is not None:
         text = listing_price
     text = re.sub("\s+|\(|\)", " ", text)
+    # TODO [YG] : change to curretn year with datetime
     text = re.sub("2021", "", text)
     text = re.sub("2022", "", text)
     text+= ' '
@@ -74,6 +75,7 @@ def parse_price(text, listing_price):
 
 class ParseLocation:
     def __init__(self):
+        # TODO [YG]: add strret capture to tal-aviv and jerualem
         israel_cities = json.load(open('israel_cities.json', encoding='utf8'))
         self.israel_cities_names = [(x['name'], x['english_name']) for x in israel_cities]
         israel_postal = json.load(open('israel_postal.json', encoding='utf8'))
@@ -89,6 +91,7 @@ class ParseLocation:
         def clean_and_match(sub_text, decrease=0.0, similarity_th=0.85):
             res = match(sub_text, similarity_th, decrease=0 + decrease)
             if sub_text.startswith('ב'):
+                # TODO [YG] : why is it with -
                 res += match(sub_text[1:], similarity_th, decrease=-0.03 + decrease)
             elif sub_text.startswith('שב'):
                 res += match(sub_text[1:], similarity_th, decrease=-0.07 + decrease)
@@ -120,6 +123,7 @@ class ParseLocation:
         if listing_location is not None:
             if listing_location.isnumeric():
                 if listing_location in self.zip_code_to_location:
+                    # TODO [YG] : check the assumtion that zipcode is correct
                     return self.zip_code_to_location[listing_location]
             else:
                 places = clean_and_match(listing_location.casefold(), decrease=0.0)

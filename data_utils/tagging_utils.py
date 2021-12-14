@@ -33,7 +33,7 @@ def create_excel_for_tagging_data():
     file_path = 'data_utils/data_for_tagging.xlsx'
     writer = pd.ExcelWriter(file_path, engine='openpyxl')
     start_idx, end_idx = 0, 100
-    for i in range(4):  # ["facebook_posts.1"]: #["1-100", "100-200", "200-300", "300-400"]:
+    for i in range(4):
         text = [x['post_text'] for x in posts[start_idx:end_idx]]
         post_id = [x['post_id'] for x in posts[start_idx:end_idx]]
         start_date = ["start_date" for x in post_id]
@@ -121,7 +121,7 @@ def read_excel_and_create_tagged_df(file_name: str = "data_utils/data_for_taggin
 def read_excel(file_name: str, name: str):
     return pandas.read_excel(file_name, sheet_name=name)
 
-
+# TODO [ES] : create some more tabs for whatsapp samples
 def create_tests_from_tagged_excel():
     def add_zero(x):
         if x[0] != '0':
@@ -153,7 +153,7 @@ def create_tests_from_tagged_excel():
     for _, tagged_item in tagged_data_df.iterrows():
 
         post = post_id_to_post[str(tagged_item['Post_id'])]
-        price = tagged_item['Price']
+        price = tagged_item['Price'] # TODO [YG] : parse price according to (<number> <d/w/m>)+
         if type(price) == int:
             price = [price]
         elif price is None or 'price' in price:
