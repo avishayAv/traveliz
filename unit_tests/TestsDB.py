@@ -8,7 +8,7 @@ from dataclasses import dataclass
 class TestGroundTruth:
     start_date: datetime.date = None
     end_date: datetime.date = None
-    price: [int] = None
+    price: {str: int} = None
     phone_number: [str] = None
     location: str = None
     rooms: float = None
