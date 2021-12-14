@@ -1,6 +1,6 @@
 from facebook_scraper import get_posts
 from requests_html import HTMLSession
-from facebook_scraper import set_proxy, set_user_agent, get_header
+from facebook_scraper import set_proxy, set_user_agent, get_user_agent, get_proxy, reset_proxy, reset_user_agent, get_header
 from random_user_agent.user_agent import UserAgent
 from random_user_agent.params import SoftwareName, OperatingSystem
 import pickle
@@ -19,19 +19,27 @@ from lxml.html import fromstring
 from itertools import cycle
 
 
-def get_useragent_list():
+def get_random_proxy():
+    url = 'https://free-proxy-list.net/'
+    response = requests.get(url)
+    parser = fromstring(response.text)
+    proxies = set()
+    for i in parser.xpath('//tbody/tr')[:1000]:
+        if i.xpath('.//td[7][contains(text(),"yes")]'):
+            # Grabbing IP and corresponding PORT
+            proxy = ":".join([i.xpath('.//td[1]/text()')[0], i.xpath('.//td[2]/text()')[0]])
+            proxies.add(proxy)
+    return random.choice(list(proxies))
+
+def get_useragent():
     software_names = [SoftwareName.CHROME.value]
     operating_systems = [OperatingSystem.WINDOWS.value, OperatingSystem.LINUX.value]
     user_agent_rotator = UserAgent(software_names=software_names, operating_systems=operating_systems, limit=100)
     # Get list of user agents.
     useragents = user_agent_rotator.get_user_agents()
-    return useragents
-
-
-def get_useragent(useragents):
-    useragent = random.choice(list(useragents))
-    usergentsend = useragent.get('user_agent')
-    return usergentsend
+    useragentTemp = random.choice(list(useragents))
+    useragent = useragentTemp.get('user_agent')
+    return useragent
 
 
 def get_data_from_facebook(already_done):
@@ -50,8 +58,14 @@ def get_data_from_facebook(already_done):
 #            time.sleep(random.randint(0, 200))
     for fb_group in fb_groups_list_public:
         if fb_group not in already_done:
+            # reset_proxy(get_random_proxy())
+            # reset_user_agent(get_useragent())
+            print(fb_group)
+            print(get_header())
+            # print(get_proxy())
+            # print(get_user_agent())
+            print()
             group_posts = []
-            globals()
             for post in get_posts(group=fb_group, pages=random.randint(1, 2), #credentials=random.choice(credentials),
                                   options={"progress": True, "posts_per_page": random.randint(50, 100)}):  # TODO : change number of pages and posts per page + add comments?
                 group_posts.append(post)
@@ -106,3 +120,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

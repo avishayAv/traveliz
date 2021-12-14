@@ -7,7 +7,6 @@ from DateParser import DatePatterns, DateReg
 
 from FacebookGroup import FacebookGroups
 
-
 def searching_for_sublet(title, text):
     pattern = 'מחפש'
     return bool(re.findall(pattern, title + text))
