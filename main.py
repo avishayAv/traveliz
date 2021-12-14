@@ -51,6 +51,7 @@ def get_data_from_facebook(already_done):
     for fb_group in fb_groups_list_public:
         if fb_group not in already_done:
             group_posts = []
+            globals()
             for post in get_posts(group=fb_group, pages=random.randint(1, 2), #credentials=random.choice(credentials),
                                   options={"progress": True, "posts_per_page": random.randint(50, 100)}):  # TODO : change number of pages and posts per page + add comments?
                 group_posts.append(post)
