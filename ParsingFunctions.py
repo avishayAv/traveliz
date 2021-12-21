@@ -154,7 +154,7 @@ class ParseLocation:
     def __call__(self, title, text, group_id, listing_location):
         city = self.get_location(title, text, group_id, listing_location)
         street = None
-        if city['תל אביב', 'ירושלים', 'חיפה']:
+        if city in ['תל אביב', 'ירושלים', 'חיפה']:
             street = self.get_location(title, text, group_id, listing_location, city)
         return {'city': city, 'street': street}
 
