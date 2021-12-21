@@ -1,3 +1,4 @@
+import pickle
 import os
 import pickle
 import random
@@ -6,15 +7,10 @@ import time
 from facebook_scraper import get_posts
 from tqdm import tqdm
 
-from AirbnbUtils import find_airbnb_listing_location, activate_venv_command, \
-    airbnb_scraper_dir_path, airbnb_data_path, list_of_locations
-import os
-import json
-from AirbnbUtils import AirbnbParser, AirbnbScraper
 from ParsingFunctions import *
-from Sublet import Airbnb, Facebook, WhatsApp
-from whatsapp_utils import download_data_from_groups
+from Sublet import Facebook, WhatsApp
 from data_utils.tagging_utils import create_excel_for_tagging_data
+from whatsapp_utils import download_data_from_groups
 
 
 def get_data_from_facebook(already_done):
