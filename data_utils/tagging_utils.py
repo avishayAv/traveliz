@@ -171,11 +171,16 @@ def create_tests_from_tagged_excel():
         start_date = date_str_to_datetime(tagged_item['Start_date'])
         end_date = date_str_to_datetime(tagged_item['End_date'])
         rooms = Rooms()
-        rooms.number = tagged_item['Rooms']
-        if type(rooms.number) in [int, float]:
-            rooms.number = float(rooms.number)
+        raw_rooms = tagged_item['Rooms']
+        if type(raw_rooms) in [int, float]:
+            rooms.number = float(raw_rooms)
         else:
-            rooms.number = None
+            split_raw_rooms = raw_rooms.split()
+            if len(split_raw_rooms) > 1:
+                rooms.number = float(split_raw_rooms[0]) if split_raw_rooms[0] != 'None' else None
+                rooms.shared = True if split_raw_rooms[1] == 's' else False
+            else:
+                rooms.number = None
         location = tagged_item['Location']
         if 'location' in location:
             location = None
