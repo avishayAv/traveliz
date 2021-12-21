@@ -186,13 +186,16 @@ def extract_dates_from_text(text, post_time):
     return min(dates), max(dates)
 
 
-def try_room_pattern_and_cleanup_text(room_pattern, text, convert_from_hebrew=False, living_room=None):
+def try_room_pattern_and_cleanup_text(room_pattern, text, convert_from_hebrew=False, living_room=None, half_included=False, no_number=False):
     hebrew_to_real_number = get_hebrew_to_real_number()
     rooms = re.findall(room_pattern, text)
     living_room_exist = re.findall(living_room, text) if living_room else None
     if len(rooms) > 0:
+        if (no_number): # single bed room pattern
+            rooms = (1, 'bedroom')
         rooms = float(hebrew_to_real_number[rooms[0][0]]) if convert_from_hebrew else float(rooms[0][0])
         rooms = rooms + 1 if living_room_exist else rooms
+        rooms = rooms + 0.5 if half_included else rooms
         masked_text = re.sub(room_pattern, '', text)
         return rooms, masked_text
     return None, None
@@ -210,6 +213,10 @@ def extract_rooms_from_text(text):
     if rooms is not None:
         return rooms, masked_text
 
+    rooms, masked_text = try_room_pattern_and_cleanup_text(rooms_parser.hebrew_total_rooms_w_half, text, True, half_included=True)
+    if rooms is not None:
+        return rooms, masked_text
+
     rooms, masked_text = try_room_pattern_and_cleanup_text(rooms_parser.bed_rooms, text, False,
                                                            rooms_parser.living_room)
     if rooms is not None:
@@ -217,6 +224,11 @@ def extract_rooms_from_text(text):
 
     rooms, masked_text = try_room_pattern_and_cleanup_text(rooms_parser.hebrew_bed_rooms, text, True,
                                                            rooms_parser.living_room)
+    if rooms is not None:
+        return rooms, masked_text
+
+    rooms, masked_text = try_room_pattern_and_cleanup_text(rooms_parser.single_bed_room, text, False,
+                                                           rooms_parser.living_room, no_number=True)
     if rooms is not None:
         return rooms, masked_text
 
