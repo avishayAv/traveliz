@@ -37,7 +37,7 @@ class Test:
     def is_test_tagged(self):
         for field in self.gt.__dataclass_fields__:
             value = getattr(self.gt, field)
-            if value is not None:
+            if field != 'rooms' and value is not None:
                 return True
         return False
 
@@ -55,4 +55,5 @@ class Tests:
 
     def dump_rooms_to_test(self):
         rooms_tests = deepcopy(self.tests)
+        rooms_tests = [test for test in rooms_tests if "2/3/4 חדרים" not in test.raw_input.text]
         return [(test.raw_input.text, test.gt.rooms) for test in rooms_tests]
