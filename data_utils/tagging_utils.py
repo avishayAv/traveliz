@@ -137,12 +137,10 @@ def create_tests_from_tagged_excel():
         if '/' not in date_str:
             return None
         d, m, y = date_str.split('/')
-        if len(d) == 1:
-            d = '0' + d
-        if len(m) == 1:
-            m = '0' + m
-        if len(y) == 2:
-            y = '20' + y
+        d = '0' + d if len(d) == 1 else d
+        m = '0' + m if len(m) == 1 else m
+        y = '20' + y if len(y) == 2 else y
+        assert len(d) == 2 and len(m) == 2 and len(y) == 4
         return datetime.strptime('/'.join([d, m, y]), '%d/%m/%Y').date()
 
     tagged_data_df = read_excel_and_create_tagged_df()
@@ -153,13 +151,14 @@ def create_tests_from_tagged_excel():
     for _, tagged_item in tagged_data_df.iterrows():
 
         post = post_id_to_post[str(tagged_item['Post_id'])]
-        price = tagged_item['Price'] # TODO [YG] : parse price according to (<number> <d/w/m>)+
-        if type(price) == int:
-            price = [price]
-        elif price is None or 'price' in price:
-            price = None
+        prices = tagged_item['Price']
+        if prices is None or 'price' in prices:
+            prices = None
         else:
-            price = [int(p) for p in price.split(',')]
+            parsed_prices = {}
+            for p in prices.split(','):
+                price, description = p.split()
+                parsed_prices[description] = int(price)
         phone_number = str(tagged_item['Phone_number'])
         if phone_number is None or 'phone' in phone_number:
             phone_number = None
@@ -180,7 +179,7 @@ def create_tests_from_tagged_excel():
             location = None
         gt = TestGroundTruth(start_date=start_date,
                              end_date=end_date,
-                             price=price, location=location,
+                             price=prices, location=location,
                              phone_number=phone_number, rooms=rooms)
         raw_input = TestRawInput(group_id=post['group_id'], location=post.get('location'),
                                  post_id=post['post_id'], price=post.get('price'),

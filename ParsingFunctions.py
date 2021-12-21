@@ -1,11 +1,14 @@
+import datetime
 import difflib
 import json
 import re
 
 from DateParser import DatePatterns, DateReg
-from RoomsParser import RoomsParser
 from FacebookGroup import FacebookGroups
+from RoomsParser import RoomsParser
 from utils import remove_time_stamp_from_text, get_hebrew_to_real_number
+
+
 # TODO [AA + YG] : refactor + standartize
 
 def searching_for_sublet(title, text):
@@ -20,7 +23,7 @@ def parse_phone_number(title, text):
     pattern = r'\d{3}-?[0-9]+-?[0-9]+-?[0-9]+'
     masked_text = text
     for match in re.finditer(pattern, text):
-        phones.append(text[match.start():match.end()].replace('972','0').replace('-',''))
+        phones.append(text[match.start():match.end()].replace('972', '0').replace('-', ''))
         masked_text = text[:match.start()] + text[match.end():]
     return phones, masked_text
 
@@ -41,21 +44,21 @@ def parse_price(text, listing_price):
     meter_pattern = r'מ"ר|מר|מטר'
     if listing_price is not None:
         text = listing_price
-    text = re.sub("\s+|\(|\)", " ", text)
-    # TODO [YG] : change to curretn year with datetime
-    text = re.sub("2021", "", text)
-    text = re.sub("2022", "", text)
-    text+= ' '
+    text = re.sub(r"\s+|\(|\)", " ", text)
+    for i in [-1, 0, 1]:
+        year = str(int(datetime.date.today().year) + i)
+        text = re.sub(year, "", text)
+    text += ' '
     words = text.split() + ['', '']  # avoid index error
     prices = {}
     price_to_symbol = {}
     for i, match in enumerate(re.findall(pattern, text)):
         # clean match from spaces
-        match = re.sub("\s+", "", match)
+        match = re.sub(r"\s+", "", match)
         match_index = [i for i in range(len(words)) if match in words[i]]
         match_index = match_index[0]
 
-        cleaned_match = re.findall(r'\d{1},?\d{2,3}', match)[0]
+        cleaned_match = re.findall(r'\d,?\d{2,3}', match)[0]
         price = int(cleaned_match.replace(',', ''))
         next_word = words[match_index + 1]
         symbol = get_symbol(next_word)
@@ -75,9 +78,10 @@ def parse_price(text, listing_price):
 
 class ParseLocation:
     def __init__(self):
-        # TODO [YG]: add strret capture to tal-aviv and jerualem
+
         israel_cities = json.load(open('israel_cities.json', encoding='utf8'))
         self.israel_cities_names = [(x['name'], x['english_name']) for x in israel_cities]
+        self.city_to_streets = json.load(open('city_to_streets.json'))
         israel_postal = json.load(open('israel_postal.json', encoding='utf8'))
         self.zip_code_to_location = {}
         for dict1 in israel_postal:
@@ -87,11 +91,10 @@ class ParseLocation:
             location = dict1['n']
             self.zip_code_to_location[zip1] = location
 
-    def __call__(self, title, text, group_id, listing_location):
+    def get_location(self, title, text, group_id, listing_location, city=None):
         def clean_and_match(sub_text, decrease=0.0, similarity_th=0.85):
             res = match(sub_text, similarity_th, decrease=0 + decrease)
             if sub_text.startswith('ב'):
-                # TODO [YG] : why is it with -
                 res += match(sub_text[1:], similarity_th, decrease=-0.03 + decrease)
             elif sub_text.startswith('שב'):
                 res += match(sub_text[1:], similarity_th, decrease=-0.07 + decrease)
@@ -99,7 +102,8 @@ class ParseLocation:
 
         def match(sub_text, similarity_th=0.85, decrease=0.0):
             res = []
-            for place in self.israel_cities_names:
+            places_in_israel = self.israel_cities_names if city is None else self.city_to_streets[city]
+            for place in places_in_israel:
                 place, place_in_english = place
                 similarity = difflib.SequenceMatcher(None, place, sub_text).ratio() - decrease
                 if similarity > similarity_th:
@@ -147,6 +151,13 @@ class ParseLocation:
         ret = sorted(optional_places, key=lambda x: x[1], reverse=True)[0]
         return ret[0]
 
+    def __call__(self, title, text, group_id, listing_location):
+        city = self.get_location(title, text, group_id, listing_location)
+        street = None
+        if city in ['תל אביב', 'ירושלים', 'חיפה']:
+            street = self.get_location(title, text, group_id, listing_location, city)
+        return {'city': city, 'street': street}
+
 
 # do not use datefinder - not working well with hebrew
 # TODO [AA] : think about grepping other fields. maybe title if exist?
@@ -181,10 +192,11 @@ def try_room_pattern_and_cleanup_text(room_pattern, text, convert_from_hebrew=Fa
     living_room_exist = re.findall(living_room, text) if living_room else None
     if len(rooms) > 0:
         rooms = float(hebrew_to_real_number[rooms[0][0]]) if convert_from_hebrew else float(rooms[0][0])
-        rooms = rooms+1 if living_room_exist else rooms
+        rooms = rooms + 1 if living_room_exist else rooms
         masked_text = re.sub(room_pattern, '', text)
         return rooms, masked_text
     return None, None
+
 
 def extract_rooms_from_text(text):
     text = remove_time_stamp_from_text(text)
@@ -198,11 +210,13 @@ def extract_rooms_from_text(text):
     if rooms is not None:
         return rooms, masked_text
 
-    rooms, masked_text = try_room_pattern_and_cleanup_text(rooms_parser.bed_rooms, text, False, rooms_parser.living_room)
+    rooms, masked_text = try_room_pattern_and_cleanup_text(rooms_parser.bed_rooms, text, False,
+                                                           rooms_parser.living_room)
     if rooms is not None:
         return rooms, masked_text
 
-    rooms, masked_text = try_room_pattern_and_cleanup_text(rooms_parser.hebrew_bed_rooms, text, True, rooms_parser.living_room)
+    rooms, masked_text = try_room_pattern_and_cleanup_text(rooms_parser.hebrew_bed_rooms, text, True,
+                                                           rooms_parser.living_room)
     if rooms is not None:
         return rooms, masked_text
 
@@ -211,4 +225,17 @@ def extract_rooms_from_text(text):
     return rooms, text
 
 
+class FreeTextParser:
+    def __init__(self):
+        self.parse_location = ParseLocation()
 
+    def parse_free_text_to_md(self, post_title='', post_text='', post_time=None, listing_location=None, group_id=None,
+                              listing_price=None):
+        rooms, masked_text = extract_rooms_from_text(post_text)
+        start_date, end_date = extract_dates_from_text(masked_text, post_time)
+        location = self.parse_location(post_title, post_text, group_id,
+                                       listing_location=listing_location)
+        phones, masked_text = parse_phone_number(post_title, post_text)
+        prices = parse_price(masked_text, listing_price=listing_price)
+        max_people = 0  # TODO : parse max_people from text
+        return start_date, end_date, rooms, phones, prices, location, max_people

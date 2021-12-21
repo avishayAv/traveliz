@@ -1,16 +1,16 @@
 import os
+from datetime import datetime
+from time import sleep
+from timeit import default_timer as timer
 
 from bs4 import BeautifulSoup
-from time import sleep
-from datetime import datetime
+from dotenv import load_dotenv
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
-# from dotenv import load_dotenv
-from timeit import default_timer as timer
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support.ui import WebDriverWait
 
 
 def is_media_in_message(message):
@@ -54,7 +54,7 @@ def is_media_in_message(message):
         images = message.find_all('img')
         if images:
             for image in images:
-                if 'blob' in image.get('src'):
+                if 'blob' in image.get('src', ''):
                     return True
 
     return False
@@ -392,7 +392,7 @@ def scrape_chat(driver):
             message_scraped['datetime'] = copyable_scrape['datetime']
             last_msg_date = message_scraped['datetime']
             message_scraped['sender'] = copyable_scrape['sender']
-            message_scraped['text'] = copyable_scrape['message']
+            message_scraped['message'] = copyable_scrape['message']
 
             # Check if message has 'selectable-text' (selectable-text tends to be a copyable-text child container span/div for messages that have text in it, storing the actual chat message text/emojis)
             if copyable_text.find('span', 'selectable-text'):
@@ -484,7 +484,7 @@ def scrape_chat(driver):
     # Update the dict by inserting message content as values
     for m in messages:
         messages_dict[m['datetime'].strftime("%m/%d/%Y")].append(
-            {'time': m['datetime'].strftime("%I:%M %p"), 'sender': m['sender'], 'message': m['message']})
+            {'time': m['datetime'].strftime("%I:%M %p"), 'sender': m['sender'], 'text': m['message']})
 
     return messages_dict
 

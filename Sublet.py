@@ -3,9 +3,8 @@ from typing import Union, Optional
 
 
 class Sublet:
-    def __init__(self, post_url: str, location: str, prices: Union[int, dict],
-                 max_people: int, images: list[str], rooms: Optional[Union[int, float]]):
-        self.post_url = post_url
+    def __init__(self, location: {}, prices: Union[int, dict],
+                 max_people: int, images: [str], rooms: Optional[Union[int, float]]):
         self.location = location
         self.prices = prices
         self.max_people = max_people
@@ -15,8 +14,9 @@ class Sublet:
 
 class Facebook(Sublet):
     def __init__(self, post_url, location, prices, max_people, images, rooms,
-                 post_time: datetime, start_date: datetime, end_date: datetime, phones: list[str]):
-        super().__init__(post_url, location, prices, max_people, images, rooms)
+                 post_time: datetime, start_date: datetime, end_date: datetime, phones: [str]):
+        super().__init__(location, prices, max_people, images, rooms)
+        self.post_url = post_url
         self.post_time = post_time
         self.start_date = start_date
         self.end_date = end_date
@@ -28,7 +28,8 @@ class Airbnb(Sublet):
     def __init__(self, post_url, location, price, max_people, images, rooms,
                  name: str, description: str, rating: Optional[int], reviews: Optional[list],
                  amenities: list, bathrooms: Optional[Union[int, float]], beds: Optional[int]):
-        super().__init__(post_url, location, price, max_people, images, rooms)
+        super().__init__(location, price, max_people, images, rooms)
+        self.post_url = post_url
         self.name = name
         self.description = description
         self.rating = rating
@@ -40,3 +41,11 @@ class Airbnb(Sublet):
     # TODO [ES] : after creating DB - create function that add calendar to existing listing
     # def add_calendar_to_listing(self, calendar: list):
     #     self.calendar = calendar
+
+
+class WhatsApp(Sublet):
+    def __init__(self, location, prices, max_people, images, rooms, phone, start_date, end_date):
+        super().__init__(location, prices, max_people, images, rooms)
+        self.phone = phone
+        self.start_date = start_date
+        self.end_date = end_date

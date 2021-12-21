@@ -1,18 +1,16 @@
-from facebook_scraper import get_posts
 import pickle
-import datetime
-from tqdm import tqdm
-from Sublet import Sublet, Airbnb, Facebook
-import time
-from FacebookGroup import FacebookGroups
-import random
 import os
-import json
-from AirbnbUtils import AirbnbParser, AirbnbScraper
+import pickle
+import random
+import time
+
+from facebook_scraper import get_posts
+from tqdm import tqdm
+
 from ParsingFunctions import *
-import numpy as np
-from whatsapp_utils import download_data_from_groups
+from Sublet import Facebook, WhatsApp
 from data_utils.tagging_utils import create_excel_for_tagging_data
+from whatsapp_utils import download_data_from_groups
 
 
 def get_data_from_facebook(already_done):
@@ -46,7 +44,7 @@ def parse_data_from_facebook(dict_of_sublets):
         for post in posts:
             list_of_sublets.append((group_id, post))
     sublets = []
-    parse_location = ParseLocation()
+    parser = FreeTextParser()
     for group_id, sublet in tqdm(list_of_sublets):
         post_title = sublet.get('title', '')
         post_text = sublet.get('text')
@@ -56,13 +54,12 @@ def parse_data_from_facebook(dict_of_sublets):
         assert post_text is not None
         post_url = sublet['post_url']
         post_time = sublet['time']
-        end_date, rooms, start_date = parse_rooms_and_dates_from_facebook(post_text, post_time)
-        location = parse_location(post_title, post_text, group_id,
-                                  listing_location=sublet['listing_location'] if 'listing_location' in sublet else None)
-        phones, masked_text = parse_phone_number(post_title, post_text)
-        prices = parse_price(masked_text, listing_price=sublet['listing_price'] if 'listing_price' in sublet else None)
-        max_people = 0  # TODO : parse max_people from text
-
+        start_date, end_date, rooms, phones, prices, location, max_people = \
+            parser.parse_free_text_to_md(post_text, post_time,
+                                         listing_location=sublet[
+                                             'listing_location'] if 'listing_location' in sublet else None
+                                         , group_id=group_id
+                                         , listing_price=sublet['listing_price'] if 'listing_price' in sublet else None)
         images = sublet['images']
         sublets.append(
             Facebook(post_url, location, prices, max_people, images, rooms,
@@ -86,18 +83,20 @@ def facebook():
 
 
 def parse_data_from_whatsapp(data):
-    parse_location = ParseLocation()
     group_to_location = {'סאבלט בדפנה': 'דפנה'}
+    parser = FreeTextParser()
+    sublets = []
     for group_name, messages_per_date in data.items():
         for date1, messages in messages_per_date.items():
             for message in messages:
-                # TODO [YG + AA] : parse common fields together with facebook
-                # TODO [YG] : parse images by phone number
-                post_time = datetime.datetime.strptime(date1 + '/' + message['time'], '%m/%d/%Y/%I:%M %p')
-                price = parse_price(message['text'], None, None)
-                location = parse_location(text=message['text'], title=None, group_id=None,
-                                          listing_location=group_to_location[group_name])
+                if searching_for_sublet('', message['text']):
+                    continue
+                post_time = datetime.datetime.strptime(date1 + '/' + message['time'], '%m/%d/%Y/%I:%M %p').date()
+                start_date, end_date, rooms, _, prices, location, max_people = parser.parse_free_text_to_md(
+                    post_text=message['text'], post_time=post_time, listing_location=group_to_location[group_name])
                 phone = message['sender']
+                # TODO [YG] : parse images by phone number
+                sublets.append(WhatsApp(location, prices, max_people, None, rooms, phone, start_date, end_date))
 
 
 def whatsapp():
