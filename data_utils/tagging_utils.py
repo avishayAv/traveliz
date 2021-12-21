@@ -10,6 +10,7 @@ from openpyxl.formatting.rule import FormulaRule
 from openpyxl.formatting.rule import Rule
 from openpyxl.styles import PatternFill, Font
 from openpyxl.styles.differential import DifferentialStyle
+from styleframe import StyleFrame
 
 from ParsingFunctions import searching_for_sublet
 from unit_tests.TestsDB import TestGroundTruth, TestRawInput, Test
@@ -28,39 +29,93 @@ def create_pkl_for_test():
     pkl.dump(random_400_posts_from_facebook, open("data_utils/random_facebook_posts.pkl", "wb"))
 
 
-def create_excel_for_tagging_data():
-    posts = pkl.load(open("data_utils/random_facebook_posts.pkl", "rb"))
-    file_path = 'data_utils/data_for_tagging.xlsx'
-    writer = pd.ExcelWriter(file_path, engine='openpyxl')
-    start_idx, end_idx = 0, 100
-    for i in range(4):
-        text = [x['post_text'] for x in posts[start_idx:end_idx]]
-        post_id = [x['post_id'] for x in posts[start_idx:end_idx]]
-        start_date = ["start_date" for x in post_id]
-        end_date = ["end_date" for x in post_id]
-        price = ["price" for x in post_id]
-        location = ["location" for x in post_id]
-        phone_number = ["phone_number" for x in post_id]
-        rooms = ["rooms" for x in post_id]
+def if_sheet_name_exists(excel_path:str,
+                         sheet_name : str):
+    xl = pd.ExcelFile(excel_path)
+    return sheet_name in xl.sheet_names
 
-        # Create some Pandas dataframes from some data.
-        from styleframe import StyleFrame
-        # Create some Pandas dataframes from some data.
-        df1 = pd.DataFrame({'Post_id': post_id,
-                            'Text': text,
-                            'Start_date': start_date,
-                            'End_date': end_date,
-                            'Price': price,
-                            'Location': location,
-                            'Phone_number': phone_number,
-                            "Rooms": rooms})
-        name = "facebook_posts" + '_' + str(i + 1)
-        StyleFrame(df1).to_excel(writer, sheet_name=name).save()
-        start_idx += 100
-        end_idx += 100
+
+def create_excel_for_facebook_data(pkl_path: str = "random_facebook_posts.pkl",
+                                   excel_path: str = "data_for_tagging.xlsx",
+                                   sheet_name: str = "facebook"):
+    assert not if_sheet_name_exists(excel_path, sheet_name), f"sheet name {sheet_name} already exists in {excel_path}"
+    posts = pkl.load(open(pkl_path, "rb"))
+
+    text = [x['post_text'] for x in posts]
+    post_id = [x['post_id'] for x in posts]
+    start_date = ["start_date" for _ in post_id]
+    end_date = ["end_date" for _ in post_id]
+    price = ["price" for _ in post_id]
+    location = ["location" for _ in post_id]
+    phone_number = ["phone_number" for _ in post_id]
+    rooms = ["rooms" for _ in post_id]
+    # Create some Pandas dataframes from some data.
+    df1 = pd.DataFrame({'Post_id': post_id,
+                        'Text': text,
+                        'Start_date': start_date,
+                        'End_date': end_date,
+                        'Price': price,
+                        'Location': location,
+                        'Phone_number': phone_number,
+                        "Rooms": rooms})
+
+    book = load_workbook(excel_path)
+    writer = pd.ExcelWriter(excel_path, engine='openpyxl')
+    writer.book = book
+    StyleFrame(df1).to_excel(writer, sheet_name=sheet_name).save()
+    writer.close()
+    file_path = excel_path
+
+    index_rules = str(len(posts) + 1)
+    add_rules_to_excel(file_path, index_rules, sheet_name)
+
+
+def create_excel_for_whatsapp_data(pkl_path: str = "sublets_from_whatsapp.p",
+                                   excel_path: str = "data_for_tagging.xlsx",
+                                   sheet_name: str = "whatsapp"):
+    assert not if_sheet_name_exists(excel_path, sheet_name), f"sheet name {sheet_name} already exists in {excel_path}"
+    posts = pkl.load(open(pkl_path, "rb"))
+    text, dates, group_name, start_date, end_date, price, location, location, phone_number, rooms = \
+        [], [], [], [], [], [], [], [], [], [],
+    for key in posts.keys():
+        posts_by_group = posts[key]
+        text += [x[0] for x in posts_by_group]
+        dates += [x[1] for x in posts_by_group]
+        group_name += [key for _ in posts_by_group]
+        start_date += ["start_date" for _ in posts_by_group]
+        end_date += ["end_date" for _ in posts_by_group]
+        price += ["price" for _ in posts_by_group]
+        location += ["location" for _ in posts_by_group]
+        phone_number += ["phone_number" for _ in posts_by_group]
+        rooms += ["rooms" for _ in posts_by_group]
+
+    # Create some Pandas dataframes from some data.
+    df1 = pd.DataFrame({'Group_name/Post_date': [x + '\n' + str(y) for x, y in zip(group_name, dates)],
+                        'Text': text,
+                        'Start_date': start_date,
+                        'End_date': end_date,
+                        'Price': price,
+                        'Location': location,
+                        'Phone_number': phone_number,
+                        "Rooms": rooms})
+
+    book = load_workbook(excel_path)
+    writer = pd.ExcelWriter(excel_path, engine='openpyxl')
+    writer.book = book
+    StyleFrame(df1).to_excel(writer, sheet_name=sheet_name).save()
+    writer.close()
+    index_rules = str(len(text) + 1)
+    add_rules_to_excel(excel_path, index_rules, sheet_name)
+
+
+def add_rules_to_excel(file_path:str,
+                       index_rules: str,
+                       sheet_name: str
+                       ):
     red_text = Font(color="9C0006")
     red_fill = PatternFill(bgColor="FFC7CE")
     dxf = DifferentialStyle(font=red_text, fill=red_fill)
+    # if cell contains orig text fill in with red color
     rule1 = Rule(type="containsText", operator="containsText", text="start_date", dxf=dxf)
     rule2 = Rule(type="containsText", operator="containsText", text="end_date", dxf=dxf)
     rule3 = Rule(type="containsText", operator="containsText", text="price", dxf=dxf)
@@ -75,44 +130,52 @@ def create_excel_for_tagging_data():
     rule5.formula = ['NOT(ISERROR(SEARCH("phone_number",G2)))']
     rule6.formula = ['NOT(ISERROR(SEARCH("rooms",H2)))']
 
-    wb = load_workbook(file_path)
+    # if cell is empty fill in with yellow color
     yellowFill = PatternFill(start_color='00FFFF00', end_color='00FFFF00', fill_type='solid')
+    rule_7 = FormulaRule(formula=['ISBLANK(C1)'], stopIfTrue=True, fill=yellowFill)
+    rule_8 = FormulaRule(formula=['ISBLANK(D1)'], stopIfTrue=True, fill=yellowFill)
+    rule_9 = FormulaRule(formula=['ISBLANK(E1)'], stopIfTrue=True, fill=yellowFill)
+    rule_10 = FormulaRule(formula=['ISBLANK(F1)'], stopIfTrue=True, fill=yellowFill)
+    rule_11 = FormulaRule(formula=['ISBLANK(G1)'], stopIfTrue=True, fill=yellowFill)
+    rule_12 = FormulaRule(formula=['ISBLANK(H1)'], stopIfTrue=True, fill=yellowFill)
 
-    for ws in wb.worksheets:
-        ws.conditional_formatting.add('C2:C101', rule1)
-        ws.conditional_formatting.add('D2:D101', rule2)
-        ws.conditional_formatting.add('E2:E101', rule3)
-        ws.conditional_formatting.add('F2:F101', rule4)
-        ws.conditional_formatting.add('G2:G101', rule5)
-        ws.conditional_formatting.add('H2:H101', rule6)
-        ws.conditional_formatting.add('C1:C101', FormulaRule(formula=['ISBLANK(C1)'], stopIfTrue=True, fill=yellowFill))
-        ws.conditional_formatting.add('D1:D101', FormulaRule(formula=['ISBLANK(D1)'], stopIfTrue=True, fill=yellowFill))
-        ws.conditional_formatting.add('E1:E101', FormulaRule(formula=['ISBLANK(E1)'], stopIfTrue=True, fill=yellowFill))
-        ws.conditional_formatting.add('F1:F101', FormulaRule(formula=['ISBLANK(F1)'], stopIfTrue=True, fill=yellowFill))
-        ws.conditional_formatting.add('G1:G101', FormulaRule(formula=['ISBLANK(G1)'], stopIfTrue=True, fill=yellowFill))
-        ws.conditional_formatting.add('H1:H101', FormulaRule(formula=['ISBLANK(H1)'], stopIfTrue=True, fill=yellowFill))
+    wb = load_workbook(file_path)
+    ws = wb[sheet_name]
+    ws.conditional_formatting.add(f'C2:C{index_rules}', rule1)
+    ws.conditional_formatting.add(f'D2:D{index_rules}', rule2)
+    ws.conditional_formatting.add(f'E2:E{index_rules}', rule3)
+    ws.conditional_formatting.add(f'F2:F{index_rules}', rule4)
+    ws.conditional_formatting.add(f'G2:G{index_rules}', rule5)
+    ws.conditional_formatting.add(f'H2:H{index_rules}', rule6)
+    ws.conditional_formatting.add(f'C1:C{index_rules}', rule_7)
+    ws.conditional_formatting.add(f'D1:D{index_rules}', rule_8)
+    ws.conditional_formatting.add(f'E1:E{index_rules}', rule_9)
+    ws.conditional_formatting.add(f'F1:F{index_rules}', rule_10)
+    ws.conditional_formatting.add(f'G1:G{index_rules}', rule_11)
+    ws.conditional_formatting.add(f'H1:H{index_rules}', rule_12)
 
-        for column in [ws['C'], ws['D'], ws['E'], ws['F'], ws['G'], ws['H']]:
-            for cell in column:
-                cell.fill = PatternFill(start_color='0000FF00', end_color='0000FF00', fill_type='solid')
+    # as default set cells colors to green
+    for column in [ws['C'], ws['D'], ws['E'], ws['F'], ws['G'], ws['H']]:
+        for cell in column:
+            cell.fill = PatternFill(start_color='0000FF00', end_color='0000FF00', fill_type='solid')
 
-        ws['C1'].fill = PatternFill(start_color='00FFFFFF', end_color='00FFFFFF', fill_type='solid')
-        ws['D1'].fill = PatternFill(start_color='00FFFFFF', end_color='00FFFFFF', fill_type='solid')
-        ws['E1'].fill = PatternFill(start_color='00FFFFFF', end_color='00FFFFFF', fill_type='solid')
-        ws['F1'].fill = PatternFill(start_color='00FFFFFF', end_color='00FFFFFF', fill_type='solid')
-        ws['G1'].fill = PatternFill(start_color='00FFFFFF', end_color='00FFFFFF', fill_type='solid')
-        ws['H1'].fill = PatternFill(start_color='00FFFFFF', end_color='00FFFFFF', fill_type='solid')
-        ws.column_dimensions['A'].width = 20
-        ws.column_dimensions['B'].width = 100
-        ws.column_dimensions['B'].heigth = 400
-        for column in [ws.column_dimensions['C'], ws.column_dimensions['D'], ws.column_dimensions['E'],
-                       ws.column_dimensions['F'], ws.column_dimensions['G'], ws.column_dimensions['H']]:
-            column.width = 20
+    ws['C1'].fill = PatternFill(start_color='00FFFFFF', end_color='00FFFFFF', fill_type='solid')
+    ws['D1'].fill = PatternFill(start_color='00FFFFFF', end_color='00FFFFFF', fill_type='solid')
+    ws['E1'].fill = PatternFill(start_color='00FFFFFF', end_color='00FFFFFF', fill_type='solid')
+    ws['F1'].fill = PatternFill(start_color='00FFFFFF', end_color='00FFFFFF', fill_type='solid')
+    ws['G1'].fill = PatternFill(start_color='00FFFFFF', end_color='00FFFFFF', fill_type='solid')
+    ws['H1'].fill = PatternFill(start_color='00FFFFFF', end_color='00FFFFFF', fill_type='solid')
+    ws.column_dimensions['A'].width = 20
+    ws.column_dimensions['B'].width = 100
+    ws.column_dimensions['B'].heigth = 400
+    for column in [ws.column_dimensions['C'], ws.column_dimensions['D'], ws.column_dimensions['E'],
+                   ws.column_dimensions['F'], ws.column_dimensions['G'], ws.column_dimensions['H']]:
+        column.width = 20
 
-        wb.save(file_path)
+    wb.save(file_path)
 
 
-def read_excel_and_create_tagged_df(file_name: str = "data_utils/data_for_tagging.xlsx",
+def read_excel_and_create_tagged_df(file_name: str = "data_for_tagging.xlsx",
                                     name: Optional[str] = None):
     df = read_excel(file_name, name=name)
     return pandas.concat([sheet_df for sheet_df in df.values()])
@@ -193,5 +256,5 @@ def create_tests_from_tagged_excel():
 
 if __name__ == '__main__':
     # create_pkl_for_test()
-    # create_excel_for_tagging_data()
+    create_excel_for_whatsapp_data()
     create_tests_from_tagged_excel()
