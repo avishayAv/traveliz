@@ -8,12 +8,11 @@ from FacebookGroup import FacebookGroups
 import random
 import os
 import json
-from AirbnbUtils import find_airbnb_listing_location, activate_venv_command, \
-    airbnb_scraper_dir_path, airbnb_data_path, list_of_locations
+from AirbnbUtils import AirbnbParser, AirbnbScraper
 from ParsingFunctions import *
 import numpy as np
 from whatsapp_utils import download_data_from_groups
-from data_utils.tagging_utils import read_excel_end_create_dict_of_tagged_data
+from data_utils.tagging_utils import create_excel_for_tagging_data
 
 
 def get_data_from_facebook(already_done):
@@ -76,64 +75,6 @@ def parse_rooms_and_dates_from_facebook(post_text, post_time):
     start_date, end_date = extract_dates_from_text(masked_text, post_time)
     return end_date, rooms, start_date
 
-# TODO [ES] : change dates to latest
-def airbnb_scraper():
-    for location in list_of_locations:
-        assert len(location) == 2, f"location field is {location}, should be [<city, country>, <name of json file>]"
-        get_data_from_airbnb(location=location, start_date="2021-11-25", end_date="2021-11-28",
-                             number_of_pages_to_scrape=50)
-        time.sleep(random.randint(120, 200))
-
-
-def get_data_from_airbnb(location: list,
-                         start_date: str,
-                         end_date: str,
-                         max_price: int = 200,  # dollars
-                         min_price: int = 100,
-                         number_of_pages_to_scrape: int = 8):
-    command = 'scrapy crawl airbnb ' \
-              '-a query="' + location[0] + '"' + \
-              ' -a checkin=' + start_date + \
-              ' -a checkout=' + end_date + \
-              ' -a max_price=' + str(max_price) + \
-              ' -a min_price=' + str(min_price) \
-              + ' -o ' + location[1] + '.json ' \
-                                       '-s CLOSESPIDER_PAGECOUNT=' + str(number_of_pages_to_scrape)
-
-    os.system('( ' + activate_venv_command + ' && cd ' + airbnb_scraper_dir_path + ' && `' + command + '`)')
-
-
-def airbnb_read_data_from_json():
-    listings = []
-    for location in list_of_locations:
-        airbnb_data = parse_airbnb_data(airbnb_data_path + location[1] + ".json")
-        listings.extend(airbnb_data)
-    return listings
-
-
-def parse_airbnb_data(json_file_path: str):
-    airbnb_data = json.load(open(json_file_path, "rb"))
-    airbnb_listings = []
-    for listing in airbnb_data:
-        name = listing['name']
-        post_url = listing['url']
-        area = json_file_path.split('/')[-1].split(".")[0]
-        location = " ".join([find_airbnb_listing_location(listing["longitude"], listing["latitude"]) + ',', area])
-        description = listing['description']
-        rating = listing['rating_value']
-        reviews = listing['reviews']
-        images = listing['photos']
-        amenities = listing['amenities']
-        max_people = listing['person_capacity']
-        prices = listing['price_rate']
-        rooms = listing["bedrooms"]  # if listing["bedrooms"] != 0 else None,
-        bathrooms = listing["bathrooms"]  # if listing["bathrooms"] != 0 else None,
-        beds = listing["beds"]  # if listing["beds"] != 0 else None,
-        airbnb_listings.append(
-            Airbnb(post_url, location, prices, max_people, images, rooms,
-                   name, description, rating, reviews, amenities, bathrooms, beds))
-    return airbnb_listings
-
 
 def facebook():
     dict_of_sublets = pickle.load(open("dict_of_sublets.p", 'rb')) if os.path.exists("dict_of_sublets.p") else {}
@@ -166,11 +107,15 @@ def whatsapp():
 
 
 def main():
-    # airbnb_scraper()
-    # airbnb_listings = airbnb_read_data_from_json()
+    # parser = AirbnbParser()
+    # res = parser.parse_airbnb_data(json_file_path = "airbnb_data/jlm.json")
+    # scraper = AirbnbScraper()
+    # scraper.airbnb_scraper()
+    #airbnb_listings = airbnb_read_data_from_json()
     # sublets = []
     # ws['A1'] = a[2]['text']
-    posts_dict = read_excel_end_create_dict_of_tagged_data(name="facebook_posts_1")
+    create_excel_for_tagging_data()
+    #posts_dict = read_excel_end_create_dict_of_tagged_data(name="facebook_posts_1")
     y = 5
     # excel_data_df = pd.read_excel('/Users/eliyasegev/Desktop/Tagged_data.xlsx', sheet_name='Facebook_data')
     # for column in excel_data_df.columns.ravel():
