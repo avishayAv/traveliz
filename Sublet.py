@@ -23,7 +23,7 @@ class Facebook(Sublet):
         self.phones = phones
 
 
-# TODO [ES] : add availability
+
 class Airbnb(Sublet):
     def __init__(self, post_url, location, price, max_people, images, rooms,
                  name: str, description: str, rating: Optional[int], reviews: Optional[list],
@@ -37,6 +37,10 @@ class Airbnb(Sublet):
         self.amenities = amenities
         self.bathrooms = bathrooms
         self.beds = beds
+
+    # TODO [ES] : after creating DB - create function that add calendar to existing listing
+    # def add_calendar_to_listing(self, calendar: list):
+    #     self.calendar = calendar
 
 
 class WhatsApp(Sublet):
