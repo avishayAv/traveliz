@@ -12,6 +12,7 @@ from openpyxl.styles import PatternFill, Font
 from openpyxl.styles.differential import DifferentialStyle
 
 from ParsingFunctions import searching_for_sublet
+from Sublet import Rooms
 from unit_tests.TestsDB import TestGroundTruth, TestRawInput, Test
 
 
@@ -169,11 +170,12 @@ def create_tests_from_tagged_excel():
 
         start_date = date_str_to_datetime(tagged_item['Start_date'])
         end_date = date_str_to_datetime(tagged_item['End_date'])
-        rooms = tagged_item['Rooms']
-        if type(rooms) in [int, float]:
-            rooms = float(rooms)
+        rooms = Rooms()
+        rooms.number = tagged_item['Rooms']
+        if type(rooms.number) in [int, float]:
+            rooms.number = float(rooms.number)
         else:
-            rooms = None
+            rooms.number = None
         location = tagged_item['Location']
         if 'location' in location:
             location = None
