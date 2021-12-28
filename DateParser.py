@@ -10,19 +10,21 @@ from utils import get_hex_unicode
 class DatePatterns:
     def __init__(self):
         self.patterns = [
-            DatePattern("combined_full_start_end_pattern1", "\d+\s*[-]\s*\d+\s*[/.]\s*\d+\s*[/.]\s*\d+", True, True),  # DD-DD/MM/YY
             DatePattern("combined_full_start_end_pattern2",
                         "\d+\s*[\\\\/.]\s*\d+\s*[\\\\/.]\s*\d+\s*[-]\s*\d+\s*[\\\\/.]\s*\d+\s*[\\\\/.]\s*\d+", True,
                         True),
             # DD/MM/YY-DD/MM/YY
             DatePattern("combined_full_start_end_pattern3", "\d+\s*[/.]\s*\d+\s*[-]\s*\d+\s*[/.]\s*\d+\s*[/.]\s*\d+", True, True),
             # DD/MM-DD/MM/YY
+            DatePattern("combined_full_start_end_pattern1", "\d+\s*[-]\s*\d+\s*[/.]\s*\d+\s*[/.]\s*\d+", True, True),
+            # DD-DD/MM/YY
             DatePattern("combined_full_start_end_pattern4", "\d+\s*[/.]\s*\d+\s*[/.]\s*\d+\s*[-]\s*\d+\s*[/.]\s*\d+", True, True),
             # DD/MM/YY-DD/MM
             DatePattern("combined_full_start_end_pattern5", "\d+\s*[/.]\s*\d+\s*[-]\s*\d+\s*[/.]\s*\d+", False, True),  # DD/MM-DD/MM
             DatePattern("combined_part_start_end_pattern2", "\d+[-]\d+[/.]\d+", False, True),  # D-D/M - not supporting whitespaces
             DatePattern("full_date_pattern", "\d+\s*[/.]\s*\d+\s*[/.]\s*\d+", True, False),
             # D/M/YY, D/M/YYYY, DD/M/YY, DD/M/YYYY, D/MM/YY, D/MM/YYYY, DD/MM/YY, DD/MM/YYYY
+            DatePattern("combined_date_half_hebrew_pattern", "\d+\s*[-]\s*\d+\s+" + DatePatterns.get_relatives() + DatePatterns.get_months(), False, True),
             DatePattern("part_date_pattern", "\d+[/.]\d+", False, False),  # D/M, DD/M, D/MM, DD/MM - not supporting whitespaces
             DatePattern("part_date_half_hebrew_pattern",
                         ("(\d+\s+" + DatePatterns.get_relatives() + DatePatterns.get_months() + ")"), False, False)
@@ -46,7 +48,11 @@ class DatePatterns:
 
     @staticmethod
     def get_months():
-        return "(?:" + get_hex_unicode("אוגוסט") + "|" + get_hex_unicode("נובמבר") + ")"
+        months = [get_hex_unicode("ינואר"), get_hex_unicode("פברואר"), get_hex_unicode("מרץ"),
+                  get_hex_unicode("אפריל"), get_hex_unicode("מאי"), get_hex_unicode("יוני"),
+                  get_hex_unicode("יולי"), get_hex_unicode("אוגוסט"), get_hex_unicode("ספטמבר"),
+                  get_hex_unicode("אוקטובר"), get_hex_unicode("נובמבר"), get_hex_unicode("דצמבר")]
+        return "(?:" + "|".join(months) + ")"
 
 
 class DatePattern:
@@ -98,7 +104,7 @@ class DateReg:
             self.date = complete_year_by_time_stamp(self.date, post_time, self.get_seperator())
 
     def hebrew_to_calendar(self):
-        if self.date_pattern.name == "part_date_half_hebrew_pattern":
+        if self.date_pattern.name == "part_date_half_hebrew_pattern" or self.date_pattern.name == "combined_date_half_hebrew_pattern":
             date = self.date.split()
             month_to_calendar = DatePatterns.get_months_by_calendar()
             if not date[1] in month_to_calendar:  # relative char before month
