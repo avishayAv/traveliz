@@ -4,37 +4,56 @@ import random
 import time
 
 from facebook_scraper import get_posts
+from facebook_scraper import set_user_agent
+from facebook_scraper import FacebookScraper
 from tqdm import tqdm
 
 from ParsingFunctions import *
 from Sublet import Facebook, WhatsApp
 from utils import whatsapp_group_to_location
-from whatsapp_utils import download_data_from_groups
+#from whatsapp_utils import download_data_from_groups
+
+import random
+from random_user_agent.user_agent import UserAgent
+from random_user_agent.params import SoftwareName, OperatingSystem
+
+
+def get_useragent():
+    software_names = [SoftwareName.CHROME.value]
+    operating_systems = [OperatingSystem.WINDOWS.value, OperatingSystem.LINUX.value]
+    user_agent_rotator = UserAgent(software_names=software_names, operating_systems=operating_systems, limit=100)
+    # Get list of user agents.
+    useragents = user_agent_rotator.get_user_agents()
+    useragentTemp = random.choice(list(useragents))
+    useragent = useragentTemp.get('user_agent')
+    return useragent
 
 
 def get_data_from_facebook(already_done):
     fb_groups = FacebookGroups().groups
     fb_groups_list_private = [group.group_id for group in fb_groups if not group.is_public]
     fb_groups_list_public = [group.group_id for group in fb_groups if group.is_public]
-    credentials = [('avishaya67@gmail.com', '0528773202'), ('yishayahug@mail.tau.ac.il', 'w,+L<e8VjmJ+,6Y')]
-    for fb_group in fb_groups_list_private:
-        if fb_group not in already_done:
-            group_posts = []
-            for post in get_posts(group=fb_group, pages=random.randint(2, 6), credentials=random.choice(credentials),
-                                  options={"progress": True, "posts_per_page": random.randint(50,
-                                                                                              100)}):  # TODO : change number of pages and posts per page + add comments?
-                group_posts.append(post)
-            yield fb_group, group_posts
-            time.sleep(random.randint(0, 200))
+    # credentials = [('yishayahug@mail.tau.ac.il', 'Password1!')]
+    # for fb_group in fb_groups_list_private:
+    #     if fb_group not in already_done:
+    #         group_posts = []
+    #         for post in get_posts(group=fb_group, pages=random.randint(2, 6), credentials=random.choice(credentials),
+    #                               options={"progress": True, "posts_per_page": random.randint(50,
+    #                                                                                           100)}):  # TODO : change number of pages and posts per page + add comments?
+    #             group_posts.append(post)
+    #         yield fb_group, group_posts
+    #         time.sleep(random.randint(0, 200))
     for fb_group in fb_groups_list_public:
         if fb_group not in already_done:
             group_posts = []
-            for post in get_posts(group=fb_group, pages=random.randint(1, 2), credentials=random.choice(credentials),
-                                  options={"progress": True, "posts_per_page": random.randint(50,
-                                                                                              100)}):  # TODO : change number of pages and posts per page + add comments?
+            for post in get_posts(group=fb_group, pages=random.randint(5, 10), # credentials=random.choice(credentials),
+                                  options={"progress": True, "posts_per_page": random.randint(50, 100)}):  # TODO : change number of pages and posts per page + add comments?
                 group_posts.append(post)
             yield fb_group, group_posts
-            time.sleep(random.randint(0, 200))
+            random_sleep = random.randint(100, 300)
+            print(f"Going to sleep for {random_sleep} seconds")
+            time.sleep(random.randint(100, 300))
+            _scraper = FacebookScraper()
 
 
 def parse_data_from_facebook(dict_of_sublets):
@@ -73,11 +92,11 @@ def parse_rooms_and_dates_from_facebook(post_text, post_time):
 
 
 def facebook():
-    dict_of_sublets = pickle.load(open("dict_of_sublets.p", 'rb')) if os.path.exists("dict_of_sublets.p") else {}
-    # for group_id, group_posts in tqdm(get_data_from_facebook(already_done=set(dict_of_sublets.keys())),
-    #                                   desc='extracting groups data'):
-    #     dict_of_sublets[group_id] = group_posts
-    #     pickle.dump(dict_of_sublets, open('dict_of_sublets.p', 'wb'))
+    dict_of_sublets = pickle.load(open("dict_of_sublets_week_trial.p", 'rb')) if os.path.exists("dict_of_sublets_week_trial.p") else {}
+    for group_id, group_posts in tqdm(get_data_from_facebook(already_done=set(dict_of_sublets.keys())),
+                                      desc='extracting groups data'):
+        dict_of_sublets[group_id] = group_posts
+        pickle.dump(dict_of_sublets, open('dict_of_sublets_week_trial.p', 'wb'))
     return parse_data_from_facebook(dict_of_sublets)
 
 
@@ -103,10 +122,10 @@ def parse_data_from_whatsapp(data):
                                                      end_date)])
     return sublets
 
-def whatsapp():
-    groups = ['סאבלט בדפנה']
-    data = download_data_from_groups(groups)
-    return parse_data_from_whatsapp(data)
+# def whatsapp():
+#     groups = ['סאבלט בדפנה']
+#     data = download_data_from_groups(groups)
+#     return parse_data_from_whatsapp(data)
 
 
 def main():
@@ -115,22 +134,22 @@ def main():
     # scraper = AirbnbScraper()
     # scraper.airbnb_scraper()
     # airbnb_listings = airbnb_read_data_from_json()
-    # sublets = []
+    sublets = []
     # ws['A1'] = a[2]['text']
     # create_excel_for_tagging_data()
     # posts_dict = read_excel_end_create_dict_of_tagged_data(name="facebook_posts_1")
-    if not os.path.exists('sublets_from_whatsapp.p'):
-        pickle.dump(whatsapp(), open('sublets_from_whatsapp.p', 'wb'))
-    else:
-        x = pickle.load(open('sublets_from_whatsapp.p', 'rb'))
+    # if not os.path.exists('sublets_from_whatsapp.p'):
+    #     pickle.dump(whatsapp(), open('sublets_from_whatsapp.p', 'wb'))
+    # else:
+    #     x = pickle.load(open('sublets_from_whatsapp.p', 'rb'))
 
-    y = 5
+    # y = 5
     # excel_data_df = pd.read_excel('/Users/eliyasegev/Desktop/Tagged_data.xlsx', sheet_name='Facebook_data')
     # for column in excel_data_df.columns.ravel():
     # print(column, ": " + str(excel_data_df[column].tolist()))
 
-    # sublets.extend(facebook())
-    pass
+    sublets.extend(facebook())
+    # pass
 
 
 if __name__ == "__main__":
