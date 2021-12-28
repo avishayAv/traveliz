@@ -54,8 +54,15 @@ class Tests:
 
     def dump_dates_to_test(self):
         dates_tests = deepcopy(self.tests)
-        return [(test.raw_input.text, test.gt.start_date, test.gt.end_date, test.raw_input.post_time.date()) for test in
-                dates_tests]
+        dates_tests = [test for test in dates_tests if
+                       "2/3/4 חדרים" not in test.raw_input.text and
+                       "דירות 3 חדרים, 2 חדרים וסטודיו" not in test.raw_input.text and
+                       "פיצוצייה 24/7" not in test.raw_input.text]
+        # 2/3/4 - filter out generic posts for multiple sublet options
+        # דירות 3 חדרים, 2 חדרים וסטודיו - filter out generic posts for multiple sublet options
+        # 24/7 is being figures as a date
+        return [(test.raw_input.text, test.gt.start_date, test.gt.end_date, test.raw_input.post_time.date(), test.source)
+                for test in dates_tests]
 
     def dump_rooms_to_test(self):
         rooms_tests = deepcopy(self.tests)
