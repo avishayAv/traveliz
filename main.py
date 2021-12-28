@@ -8,6 +8,7 @@ from tqdm import tqdm
 
 from ParsingFunctions import *
 from Sublet import Facebook, WhatsApp
+from utils import whatsapp_group_to_location
 from whatsapp_utils import download_data_from_groups
 
 
@@ -81,7 +82,7 @@ def facebook():
 
 
 def parse_data_from_whatsapp(data):
-    group_to_location = {'סאבלט בדפנה': 'דפנה'}
+
     parser = FreeTextParser()
     sublets = {}
     for group_name, messages_per_date in data.items():
@@ -93,7 +94,8 @@ def parse_data_from_whatsapp(data):
                     continue
                 post_time = datetime.datetime.strptime(date1 + '/' + message['time'], '%m/%d/%Y/%I:%M %p').date()
                 start_date, end_date, rooms, _, prices, location, max_people = parser.parse_free_text_to_md(
-                    post_text=message['text'], post_time=post_time, listing_location=group_to_location[group_name])
+                    post_text=message['text'], post_time=post_time,
+                    listing_location=whatsapp_group_to_location[group_name])
                 phone = message['sender']
                 # TODO [YG] : parse images by phone number
                 sublets[group_name].append([message['text'], post_time,

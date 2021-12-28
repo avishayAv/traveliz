@@ -3,6 +3,8 @@ import pickle
 from copy import deepcopy
 from dataclasses import dataclass
 
+from Sublet import Rooms
+
 
 @dataclass
 class TestGroundTruth:
@@ -11,7 +13,7 @@ class TestGroundTruth:
     price: {str: int} = None
     phone_number: [str] = None
     location: str = None
-    rooms: float = None
+    rooms: Rooms = None
 
 
 @dataclass

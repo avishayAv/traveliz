@@ -15,6 +15,7 @@ from styleframe import StyleFrame
 from ParsingFunctions import searching_for_sublet
 from Sublet import Rooms
 from unit_tests.TestsDB import TestGroundTruth, TestRawInput, Test
+from utils import whatsapp_group_to_location
 
 
 def create_pkl_for_test():
@@ -176,14 +177,16 @@ def add_rules_to_excel(file_path:str,
     wb.save(file_path)
 
 
-def read_excel_and_create_tagged_df(file_name: str = "data_for_tagging.xlsx",
+def read_excel_and_create_tagged_df(file_name: str = "data_utils/data_for_tagging.xlsx",
                                     name: Optional[str] = None):
     df = read_excel(file_name, name=name)
-    return pandas.concat([sheet_df for sheet_df in df.values()])
+    for sheet_name, sheet_df in df.items():
+        yield sheet_name, sheet_df
 
 
 def read_excel(file_name: str, name: str):
     return pandas.read_excel(file_name, sheet_name=name)
+
 
 # TODO [ES] : create some more tabs for whatsapp samples
 def create_tests_from_tagged_excel():
@@ -207,64 +210,75 @@ def create_tests_from_tagged_excel():
         assert len(d) == 2 and len(m) == 2 and len(y) == 4
         return datetime.strptime('/'.join([d, m, y]), '%d/%m/%Y').date()
 
-    tagged_data_df = read_excel_and_create_tagged_df()
-    tagged_data_df = tagged_data_df.where(pd.notnull(tagged_data_df), None)
+    tests_db = []
     posts = pkl.load(open("data_utils/random_facebook_posts.pkl", "rb"))
     post_id_to_post = {str(x['post_id']): x for x in posts}
-    tests_db = []
-    for _, tagged_item in tagged_data_df.iterrows():
+    for data_source, tagged_data_df in read_excel_and_create_tagged_df():
+        tagged_data_df = tagged_data_df.where(pd.notnull(tagged_data_df), None)
 
-        post = post_id_to_post[str(tagged_item['Post_id'])]
-        prices = tagged_item['Price']
-        if prices is None or 'price' in prices:
-            prices = None
-        else:
-            parsed_prices = {}
-            for p in prices.split(','):
-                price, description = p.split()
-                while description in parsed_prices:
-                    description += '_'
-                parsed_prices[description] = int(price)
-            prices = parsed_prices
-        phone_number = str(tagged_item['Phone_number']).replace(' ', '')
-        if phone_number is None or 'phone' in phone_number:
-            phone_number = None
-        elif phone_number.isnumeric():
-            phone_number = [add_zero(phone_number)]
-        else:
-            phone_number = [add_zero(x) for x in phone_number.split(',')]
+        for _, tagged_item in tagged_data_df.iterrows():
 
-        start_date = date_str_to_datetime(tagged_item['Start_date'])
-        end_date = date_str_to_datetime(tagged_item['End_date'])
-        rooms = Rooms()
-        raw_rooms = tagged_item['Rooms']
-        if type(raw_rooms) in [int, float]:
-            rooms.number = float(raw_rooms)
-        else:
-            split_raw_rooms = raw_rooms.split()
-            if len(split_raw_rooms) > 1:
-                rooms.number = float(split_raw_rooms[0]) if split_raw_rooms[0] != 'None' else None
-                rooms.shared = True if split_raw_rooms[1] == 's' else False
+            prices = tagged_item['Price']
+            if prices is None or 'price' in prices:
+                prices = None
             else:
-                rooms.number = None
-        location = tagged_item['Location']
-        if 'location' in location:
-            location = None
-        gt = TestGroundTruth(start_date=start_date,
-                             end_date=end_date,
-                             price=prices, location=location,
-                             phone_number=phone_number, rooms=rooms)
-        raw_input = TestRawInput(group_id=post['group_id'], location=post.get('location'),
-                                 post_id=post['post_id'], price=post.get('price'),
-                                 text=post['text'], title=post.get('title', ''),
-                                 post_time=post['time'])
-        test = Test(gt=gt, raw_input=raw_input)
-        if test.is_test_tagged():
-            tests_db.append(test)
+                parsed_prices = {}
+                for p in prices.split(','):
+                    price, description = p.split()
+                    while description in parsed_prices:
+                        description += '_'
+                    parsed_prices[description] = int(price)
+                prices = parsed_prices
+            phone_number = str(tagged_item['Phone_number']).replace(' ', '')
+            if phone_number is None or 'phone' in phone_number:
+                phone_number = None
+            elif phone_number.isnumeric():
+                phone_number = [add_zero(phone_number)]
+            else:
+                phone_number = [add_zero(x) for x in phone_number.split(',')]
+
+            start_date = date_str_to_datetime(tagged_item['Start_date'])
+            end_date = date_str_to_datetime(tagged_item['End_date'])
+            rooms = Rooms()
+            raw_rooms = tagged_item['Rooms']
+            if type(raw_rooms) in [int, float]:
+                rooms.number = float(raw_rooms)
+            else:
+                split_raw_rooms = raw_rooms.split()
+                if len(split_raw_rooms) > 1:
+                    rooms.number = float(split_raw_rooms[0]) if split_raw_rooms[0] != 'None' else None
+                    rooms.shared = True if split_raw_rooms[1] == 's' else False
+                else:
+                    rooms.number = None
+            location = tagged_item['Location']
+            if 'location' in location:
+                location = None
+            gt = TestGroundTruth(start_date=start_date,
+                                 end_date=end_date,
+                                 price=prices, location=location,
+                                 phone_number=phone_number, rooms=rooms)
+            if data_source == 'facebook':
+                post = post_id_to_post[str(tagged_item['Post_id'])]
+                raw_input = TestRawInput(group_id=post['group_id'], location=post.get('location'),
+                                         post_id=post['post_id'], price=post.get('price'),
+                                         text=post['text'], title=post.get('title', ''),
+                                         post_time=post['time'])
+            else:
+                assert data_source == 'whatsapp'
+                # self, post_title='', post_text='', post_time=None, listing_location=None, group_id=None
+                # post_text=message['text'], post_time=post_time, listing_location=group_to_location[group_name]
+                # listing_price=None
+                group_name, post_date = tagged_item['Group_name/Post_date'].split('\n')
+                raw_input = TestRawInput(location=whatsapp_group_to_location[group_name],
+                                         text=tagged_item['Text'],
+                                         post_time=datetime.strptime(post_date, '%Y-%m-%d').date())
+            test = Test(gt=gt, raw_input=raw_input)
+            if test.is_test_tagged():
+                tests_db.append(test)
     pkl.dump(tests_db, open('unit_tests/test_db.p', 'wb'))
 
 
 if __name__ == '__main__':
     # create_pkl_for_test()
-    create_excel_for_whatsapp_data()
+    # create_excel_for_whatsapp_data()
     create_tests_from_tagged_excel()
