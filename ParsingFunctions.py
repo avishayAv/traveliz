@@ -195,8 +195,7 @@ def try_room_pattern_and_cleanup_text(room_pattern, text, convert_from_hebrew=Fa
         if no_number:   # single bed room pattern
             grep_rooms = [(1, 'bedroom')]
         rooms = Rooms()
-        if roommates:
-            rooms.shared = True
+        rooms.shared = roommates
         rooms.number = float(hebrew_to_real_number[grep_rooms[0][0]]) if convert_from_hebrew else float(grep_rooms[0][0])
         rooms.number = rooms.number + 1 if living_room_exist else rooms.number
         rooms.number = rooms.number + 0.5 if half_included else rooms.number
