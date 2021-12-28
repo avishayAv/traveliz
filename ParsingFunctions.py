@@ -7,8 +7,8 @@ from DateParser import DatePatterns, DateReg
 from FacebookGroup import FacebookGroups
 from HyperParams import get_location_hyper_params
 from RoomsParser import RoomsParser
-from Sublet import Rooms
-from utils import remove_time_stamp_from_text, get_hebrew_to_real_number, get_hex_unicode
+from Sublet import Rooms, Location
+from utils import remove_time_stamp_from_text, get_hebrew_to_real_number, main_locations_to_cities
 
 
 # TODO [AA + YG] : refactor + standartize
@@ -54,7 +54,7 @@ def parse_price(text, listing_price):
 
     pattern = r'\D[1-9]\d?,?\d{1,3}0\D'
     meter_pattern = "|".join(
-        [get_hex_unicode('מטר'), get_hex_unicode('מר'), get_hex_unicode('מ"ר'), get_hex_unicode("מ'")])
+        ['מגה', 'מטר', 'מר', 'מ"ר', "מ'"])
     if listing_price is not None:
         text = listing_price
     text = re.sub(r"\s+|\(|\)", " ", text)
@@ -77,7 +77,7 @@ def parse_price(text, listing_price):
             next_words = text[match.end():].split() + ['']
         match = text[match.start():match.end()]
         # clean match from spaces
-        match = re.sub(r"\s+", "", match)
+        match = re.sub(r"\D+", "", match)
         price = int(match.replace(',', ''))
         next_word = next_words[0]
         symbol = get_symbol(next_word)
@@ -101,6 +101,7 @@ class ParseLocation:
         israel_cities = json.load(open('israel_cities.json', encoding='utf8'))
         self.israel_cities_names = [(x['name'], x['english_name']) for x in israel_cities]
         self.city_to_streets = json.load(open('city_to_streets.json'))
+        self.main_locations_to_cities = main_locations_to_cities
         israel_postal = json.load(open('israel_postal.json', encoding='utf8'))
         self.zip_code_to_location = {}
         for dict1 in israel_postal:
@@ -117,6 +118,10 @@ class ParseLocation:
                 res += match(sub_text[1:], similarity_th, decrease=-0.03 + decrease)
             elif sub_text.startswith('שב'):
                 res += match(sub_text[1:], similarity_th, decrease=-0.07 + decrease)
+            if sub_text in self.main_locations_to_cities:
+                res += [(self.main_locations_to_cities[sub_text], 0.95)]
+            if sub_text.startswith('מ') and sub_text[1:] in self.main_locations_to_cities:
+                res += [(self.main_locations_to_cities[sub_text[1:]], 0.90)]
             return res
 
         def match(sub_text, similarity_th=0.85, decrease=0.0):
@@ -169,17 +174,16 @@ class ParseLocation:
 
         prev_word = ''
         for word in words:
-            if 'רחוב' in prev_word:
-                continue
-            optional_places.extend(clean_and_match(word,
-                                                   decrease=get_location_hyper_params.prev_word_decrease if prev_word == 'ליד' else 0.0))
+            if 'רחוב' not in prev_word and 'שדרות' not in prev_word:
+                optional_places.extend(clean_and_match(word,
+                                                       decrease=get_location_hyper_params.prev_word_decrease if prev_word == 'ליד' else 0.0))
             prev_word = word
+        prev_word = ''
         for word1, word2 in zip(words[:-1], words[1:]):
-            if 'רחוב' in prev_word:
-                continue
-            optional_places.extend(
-                clean_and_match(' '.join([word1, word2]),
-                                decrease=get_location_hyper_params.prev_word_decrease if prev_word == 'ליד' else 0.0))
+            if 'רחוב' not in prev_word and 'שדרות' not in prev_word:
+                optional_places.extend(
+                    clean_and_match(' '.join([word1, word2]),
+                                    decrease=get_location_hyper_params.prev_word_decrease if prev_word == 'ליד' else 0.0))
             prev_word = word1
         if not optional_places:
             return None
@@ -192,7 +196,7 @@ class ParseLocation:
         if city in ['תל אביב', 'ירושלים', 'חיפה']:
             street = self.get_location(title, text, group_id, listing_location, city)
         # TODO [YG]: change to dataclass
-        return {'city': city, 'street': street}
+        return Location(city=city, street=street)
 
 
 # do not use datefinder - not working well with hebrew

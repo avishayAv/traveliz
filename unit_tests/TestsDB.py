@@ -1,8 +1,11 @@
 import datetime
+import os
 import pickle
 from copy import deepcopy
 from dataclasses import dataclass
+from pathlib import Path
 
+from ParsingFunctions import ParseLocation
 from Sublet import Rooms
 
 
@@ -66,3 +69,19 @@ class Tests:
         # ananda - מסבלט את חדרי הקסום בדירה מהממת ביפו. 200 מ' מהים. עם שותפות חמודות וגוד וייבז
 
         return [(test.raw_input.text, test.gt.rooms) for test in rooms_tests]
+
+    def dump_phones_to_test(self):
+        return [(test.raw_input.text, test.raw_input.title, test.gt.phone_number, test.source) for test in
+                self.tests]
+
+    def dump_prices_to_test(self):
+        return [(test.raw_input.text, test.raw_input.title, test.raw_input.price, test.gt.price) for test in
+                self.tests]
+
+    def dump_locations_to_test(self):
+        os.chdir(Path(os.getcwd()).parent)
+        parse_location = ParseLocation()
+        os.chdir(os.path.join(os.getcwd(), 'unit_tests'))
+        return [(parse_location, test.raw_input.title, test.raw_input.text, test.raw_input.location,
+                 test.raw_input.group_id, test.gt.location) for test in
+                self.tests]

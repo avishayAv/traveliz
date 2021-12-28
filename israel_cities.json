@@ -630,12 +630,6 @@
     "latt": 32.95765
   },
   {
-    "name": "אלעזר",
-    "english_name": "el'azar",
-    "long": 35.14147,
-    "latt": 31.66193
-  },
-  {
     "name": "אמנון",
     "english_name": "amnun",
     "long": 35.57344,
@@ -3292,6 +3286,12 @@
     "english_name": "kefar adummim",
     "long": 35.33652,
     "latt": 31.82707
+  },
+  {
+    "name": "כפר אדמה",
+    "english_name": "kefar adama",
+    "long": 0,
+    "latt": 0
   },
   {
     "name": "כעביה-טבאש-חג'אג'רה",

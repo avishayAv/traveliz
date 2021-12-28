@@ -1,4 +1,5 @@
 import datetime
+from dataclasses import dataclass
 from typing import Union, Optional
 
 
@@ -8,8 +9,14 @@ class Rooms:
         self.shared = False
 
 
+@dataclass
+class Location:
+    city: str
+    street: str
+
+
 class Sublet:
-    def __init__(self, location: {}, prices: Union[int, dict],
+    def __init__(self, location: Location, prices: Union[int, dict],
                  max_people: int, images: [str], rooms: Optional[Union[int, float]]):
         self.location = location
         self.prices = prices
