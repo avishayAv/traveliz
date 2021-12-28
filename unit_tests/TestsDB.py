@@ -3,6 +3,8 @@ import pickle
 from copy import deepcopy
 from dataclasses import dataclass
 
+from Sublet import Rooms
+
 
 @dataclass
 class TestGroundTruth:
@@ -11,7 +13,7 @@ class TestGroundTruth:
     price: {str: int} = None
     phone_number: [str] = None
     location: str = None
-    rooms: float = None
+    rooms: Rooms = None
 
 
 @dataclass
@@ -29,10 +31,12 @@ class TestRawInput:
 class Test:
     gt: TestGroundTruth
     raw_input: TestRawInput
+    source: str
 
-    def __init__(self, gt, raw_input):
+    def __init__(self, gt, raw_input, source):
         self.gt = gt
         self.raw_input = raw_input
+        self.source = source
 
     def is_test_tagged(self):
         for field in self.gt.__dataclass_fields__:
@@ -55,5 +59,10 @@ class Tests:
 
     def dump_rooms_to_test(self):
         rooms_tests = deepcopy(self.tests)
-        rooms_tests = [test for test in rooms_tests if "2/3/4 חדרים" not in test.raw_input.text]
+        rooms_tests = [test for test in rooms_tests if
+                       "2/3/4 חדרים" not in test.raw_input.text and
+                       "אננדה" not in test.raw_input.text]
+        # 2/3/4 - filter out generic posts for multiple sublet options
+        # ananda - מסבלט את חדרי הקסום בדירה מהממת ביפו. 200 מ' מהים. עם שותפות חמודות וגוד וייבז
+
         return [(test.raw_input.text, test.gt.rooms) for test in rooms_tests]

@@ -15,6 +15,9 @@ class RoomsParser:
         self.single_bed_room = self.get_single_bedroom_keywords()
         self.living_room = self.get_living_room_keywords()
         self.one_room_apt = self.get_one_room_apt_keywords()
+        self.shared_apt = self.get_shared_apt_keywords()
+        self.shared_apt_w_rooms = "\d+\s+" + self.get_roommates()
+        self.shared_apt_w_rooms_hebrew = self.get_hebrew_number_of_rooms() + "\s+" + self.get_roommates()
 
     @staticmethod
     def get_total_rooms_keywords():
@@ -40,7 +43,17 @@ class RoomsParser:
     # TODO [AA] : seperate 1 room apt from room in a shared apt - how?
     @staticmethod
     def get_one_room_apt_keywords():
-        keywords = ['studio', get_hex_unicode("סטודיו"), get_hex_unicode("יחידת נופש"), get_hex_unicode("יחידת הנופש"), get_hex_unicode("גלריה"), get_hex_unicode("היחידה"), get_hex_unicode("דירת חדר"), get_hex_unicode("חדר בדירה"), get_hex_unicode("חדר בדירת שותפים")]
+        keywords = ['studio', get_hex_unicode("סטודיו"), get_hex_unicode("יחידת נופש"), get_hex_unicode("יחידת הנופש"), get_hex_unicode("גלריה"), get_hex_unicode("היחידה"), get_hex_unicode("דירת חדר")]
+        return allow_multiple_string_options(keywords)
+
+    @staticmethod
+    def get_shared_apt_keywords():
+        keywords = [get_hex_unicode("חדר בדירה"), get_hex_unicode("חדר בדירת שותפים")]
+        return allow_multiple_string_options(keywords)
+
+    @staticmethod
+    def get_roommates():
+        keywords = ['roomates', get_hex_unicode("שותפים"), get_hex_unicode("שותפות")]
         return allow_multiple_string_options(keywords)
 
     @staticmethod
@@ -53,7 +66,8 @@ class RoomsParser:
                     get_hex_unicode("שישה"), get_hex_unicode("שבעה"), get_hex_unicode("שמונה"), get_hex_unicode("תשעה"),
                     get_hex_unicode("עשרה"),
                     get_hex_unicode("שתי"), get_hex_unicode("שלוש"), get_hex_unicode("ארבע"), get_hex_unicode("חמש"),
-                    get_hex_unicode("שש"), get_hex_unicode("שבע"), get_hex_unicode("תשע"), get_hex_unicode("עשר")]
+                    get_hex_unicode("שש"), get_hex_unicode("שבע"), get_hex_unicode("תשע"), get_hex_unicode("עשר"),
+                    get_hex_unicode("שניים"), get_hex_unicode("שתיים")]
         return allow_multiple_string_options(keywords)
 
 

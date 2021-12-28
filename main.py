@@ -1,4 +1,3 @@
-import pickle
 import os
 import pickle
 import random
@@ -9,7 +8,7 @@ from tqdm import tqdm
 
 from ParsingFunctions import *
 from Sublet import Facebook, WhatsApp
-from data_utils.tagging_utils import create_excel_for_tagging_data
+from utils import whatsapp_group_to_location
 from whatsapp_utils import download_data_from_groups
 
 
@@ -83,26 +82,31 @@ def facebook():
 
 
 def parse_data_from_whatsapp(data):
-    group_to_location = {'סאבלט בדפנה': 'דפנה'}
+
     parser = FreeTextParser()
-    sublets = []
+    sublets = {}
     for group_name, messages_per_date in data.items():
+        if group_name not in sublets:
+            sublets[group_name] = []
         for date1, messages in messages_per_date.items():
             for message in messages:
                 if searching_for_sublet('', message['text']):
                     continue
                 post_time = datetime.datetime.strptime(date1 + '/' + message['time'], '%m/%d/%Y/%I:%M %p').date()
                 start_date, end_date, rooms, _, prices, location, max_people = parser.parse_free_text_to_md(
-                    post_text=message['text'], post_time=post_time, listing_location=group_to_location[group_name])
+                    post_text=message['text'], post_time=post_time,
+                    listing_location=whatsapp_group_to_location[group_name])
                 phone = message['sender']
                 # TODO [YG] : parse images by phone number
-                sublets.append(WhatsApp(location, prices, max_people, None, rooms, phone, start_date, end_date))
-
+                sublets[group_name].append([message['text'], post_time,
+                                            WhatsApp(location, prices, max_people, None, rooms, phone, start_date,
+                                                     end_date)])
+    return sublets
 
 def whatsapp():
     groups = ['סאבלט בדפנה']
     data = download_data_from_groups(groups)
-    parse_data_from_whatsapp(data)
+    return parse_data_from_whatsapp(data)
 
 
 def main():
@@ -110,11 +114,16 @@ def main():
     # res = parser.parse_airbnb_data(json_file_path = "airbnb_data/jlm.json")
     # scraper = AirbnbScraper()
     # scraper.airbnb_scraper()
-    #airbnb_listings = airbnb_read_data_from_json()
+    # airbnb_listings = airbnb_read_data_from_json()
     # sublets = []
     # ws['A1'] = a[2]['text']
-    create_excel_for_tagging_data()
-    #posts_dict = read_excel_end_create_dict_of_tagged_data(name="facebook_posts_1")
+    # create_excel_for_tagging_data()
+    # posts_dict = read_excel_end_create_dict_of_tagged_data(name="facebook_posts_1")
+    if not os.path.exists('sublets_from_whatsapp.p'):
+        pickle.dump(whatsapp(), open('sublets_from_whatsapp.p', 'wb'))
+    else:
+        x = pickle.load(open('sublets_from_whatsapp.p', 'rb'))
+
     y = 5
     # excel_data_df = pd.read_excel('/Users/eliyasegev/Desktop/Tagged_data.xlsx', sheet_name='Facebook_data')
     # for column in excel_data_df.columns.ravel():
