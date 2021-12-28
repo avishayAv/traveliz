@@ -19,7 +19,11 @@ class TestRoomsParser(unittest.TestCase):
     @parameterized.expand(Tests().dump_rooms_to_test())
     def test_extract_rooms_from_text(self, text, rooms):
         actual_rooms, masked_text = extract_rooms_from_text(text)
-        self.assertEqual(actual_rooms, rooms)
+        # if actual_rooms.number != rooms.number:
+        #     print (text)
+        self.assertEqual(actual_rooms.number, rooms.number)
+        self.assertEqual(actual_rooms.shared, rooms.shared)
+
 
 
 if __name__ == '__main__':

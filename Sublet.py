@@ -2,6 +2,12 @@ import datetime
 from typing import Union, Optional
 
 
+class Rooms:
+    def __init__(self):
+        self.number = None
+        self.shared = False
+
+
 class Sublet:
     def __init__(self, location: {}, prices: Union[int, dict],
                  max_people: int, images: [str], rooms: Optional[Union[int, float]]):

@@ -6,6 +6,7 @@ import re
 from DateParser import DatePatterns, DateReg
 from FacebookGroup import FacebookGroups
 from RoomsParser import RoomsParser
+from Sublet import Rooms
 from utils import remove_time_stamp_from_text, get_hebrew_to_real_number
 
 
@@ -212,13 +213,17 @@ def extract_dates_from_text(text, post_time):
     return min(dates), max(dates)
 
 
-def try_room_pattern_and_cleanup_text(room_pattern, text, convert_from_hebrew=False, living_room=None):
+def try_room_pattern_and_cleanup_text(room_pattern, text, convert_from_hebrew=False, living_room=None, half_included=False, no_number=False):
     hebrew_to_real_number = get_hebrew_to_real_number()
-    rooms = re.findall(room_pattern, text)
+    grep_rooms = re.findall(room_pattern, text)
     living_room_exist = re.findall(living_room, text) if living_room else None
-    if len(rooms) > 0:
-        rooms = float(hebrew_to_real_number[rooms[0][0]]) if convert_from_hebrew else float(rooms[0][0])
-        rooms = rooms + 1 if living_room_exist else rooms
+    if len(grep_rooms) > 0:
+        if (no_number): # single bed room pattern
+            grep_rooms = [(1, 'bedroom')]
+        rooms = Rooms()
+        rooms.number = float(hebrew_to_real_number[grep_rooms[0][0]]) if convert_from_hebrew else float(grep_rooms[0][0])
+        rooms.number = rooms.number + 1 if living_room_exist else rooms.number
+        rooms.number = rooms.number + 0.5 if half_included else rooms.number
         masked_text = re.sub(room_pattern, '', text)
         return rooms, masked_text
     return None, None
@@ -235,6 +240,10 @@ def extract_rooms_from_text(text):
     if rooms is not None:
         return rooms, masked_text
 
+    rooms, masked_text = try_room_pattern_and_cleanup_text(rooms_parser.hebrew_total_rooms_w_half, text, True, half_included=True)
+    if rooms is not None:
+        return rooms, masked_text
+
     rooms, masked_text = try_room_pattern_and_cleanup_text(rooms_parser.bed_rooms, text, False,
                                                            rooms_parser.living_room)
     if rooms is not None:
@@ -245,8 +254,14 @@ def extract_rooms_from_text(text):
     if rooms is not None:
         return rooms, masked_text
 
+    rooms, masked_text = try_room_pattern_and_cleanup_text(rooms_parser.single_bed_room, text, False,
+                                                           rooms_parser.living_room, no_number=True)
+    if rooms is not None:
+        return rooms, masked_text
+
     one_room_apt = re.findall(rooms_parser.one_room_apt, text)
-    rooms = float(1) if len(one_room_apt) > 0 else None
+    rooms = Rooms()
+    rooms.number = float(1) if len(one_room_apt) > 0 else None
     return rooms, text
 
 
