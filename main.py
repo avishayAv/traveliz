@@ -4,7 +4,6 @@ import random
 import time
 
 from facebook_scraper import get_posts
-from facebook_scraper import set_user_agent
 from facebook_scraper import FacebookScraper
 from tqdm import tqdm
 
@@ -13,20 +12,6 @@ from Sublet import Facebook, WhatsApp
 from utils import whatsapp_group_to_location
 #from whatsapp_utils import download_data_from_groups
 
-import random
-from random_user_agent.user_agent import UserAgent
-from random_user_agent.params import SoftwareName, OperatingSystem
-
-
-def get_useragent():
-    software_names = [SoftwareName.CHROME.value]
-    operating_systems = [OperatingSystem.WINDOWS.value, OperatingSystem.LINUX.value]
-    user_agent_rotator = UserAgent(software_names=software_names, operating_systems=operating_systems, limit=100)
-    # Get list of user agents.
-    useragents = user_agent_rotator.get_user_agents()
-    useragentTemp = random.choice(list(useragents))
-    useragent = useragentTemp.get('user_agent')
-    return useragent
 
 
 def get_data_from_facebook(already_done):
