@@ -455,7 +455,8 @@ def scrape_chat(driver):
                     message, last_msg_date)
                 last_msg_date = message_scraped['datetime']
                 message_scraped['message'] = '<Media omitted>'
-
+        if message_scraped['message'] is None:
+            continue
         # Add the message object to list
         if 'grouped-sticker' not in message.get('data-id'):
             messages.append(message_scraped.copy())

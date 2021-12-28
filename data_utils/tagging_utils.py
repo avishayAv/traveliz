@@ -158,8 +158,11 @@ def create_tests_from_tagged_excel():
             parsed_prices = {}
             for p in prices.split(','):
                 price, description = p.split()
+                while description in parsed_prices:
+                    description += '_'
                 parsed_prices[description] = int(price)
-        phone_number = str(tagged_item['Phone_number'])
+            prices = parsed_prices
+        phone_number = str(tagged_item['Phone_number']).replace(' ', '')
         if phone_number is None or 'phone' in phone_number:
             phone_number = None
         elif phone_number.isnumeric():
