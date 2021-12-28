@@ -24,10 +24,10 @@ class DatePatterns:
             DatePattern("combined_part_start_end_pattern2", "\d+[-]\d+[/.]\d+", False, True),  # D-D/M - not supporting whitespaces
             DatePattern("full_date_pattern", "\d+\s*[/.]\s*\d+\s*[/.]\s*\d+", True, False),
             # D/M/YY, D/M/YYYY, DD/M/YY, DD/M/YYYY, D/MM/YY, D/MM/YYYY, DD/MM/YY, DD/MM/YYYY
-            DatePattern("combined_date_half_hebrew_pattern", "\d+\s*[-]\s*\d+\s+" + DatePatterns.get_relatives() + DatePatterns.get_months(), False, True),
+            DatePattern("combined_date_half_hebrew_pattern", "\d+\s*[-]\s*\d+\s+" + DatePatterns.get_relatives() + DatePatterns.get_months(), False, True, True),
             DatePattern("part_date_pattern", "\d+[/.]\d+", False, False),  # D/M, DD/M, D/MM, DD/MM - not supporting whitespaces
             DatePattern("part_date_half_hebrew_pattern",
-                        ("(\d+\s+" + DatePatterns.get_relatives() + DatePatterns.get_months() + ")"), False, False)
+                        ("(\d+\s+" + DatePatterns.get_relatives() + DatePatterns.get_months() + ")"), False, False, True)
         ]
 
     @staticmethod
@@ -56,11 +56,12 @@ class DatePatterns:
 
 
 class DatePattern:
-    def __init__(self, name, pattern, with_year, is_range):
+    def __init__(self, name, pattern, with_year, is_range, partially_hebrew=False):
         self.name: str = name
         self.pattern: str = pattern
         self.with_year: bool = with_year
         self.is_range: bool = is_range
+        self.partially_hebrew: bool = partially_hebrew
 
 
 class DateSeperator(Enum):
@@ -104,7 +105,7 @@ class DateReg:
             self.date = complete_year_by_time_stamp(self.date, post_time, self.get_seperator())
 
     def hebrew_to_calendar(self):
-        if self.date_pattern.name == "part_date_half_hebrew_pattern" or self.date_pattern.name == "combined_date_half_hebrew_pattern":
+        if self.date_pattern.partially_hebrew:
             date = self.date.split()
             month_to_calendar = DatePatterns.get_months_by_calendar()
             if not date[1] in month_to_calendar:  # relative char before month
