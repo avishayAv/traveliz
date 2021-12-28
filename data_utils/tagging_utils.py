@@ -273,7 +273,7 @@ def create_tests_from_tagged_excel():
                 group_name, post_date, sender_phone = tagged_item['Group_name/Post_date/Post_phone'].split('\n')
                 raw_input = TestRawInput(location=whatsapp_group_to_location[group_name],
                                          text=tagged_item['Text'],
-                                         post_time=datetime.strptime(post_date, '%Y-%m-%d').date(),
+                                         post_time=datetime.strptime(post_date, '%Y-%m-%d'),
                                          phone_number=sender_phone)
             test = Test(gt=gt, raw_input=raw_input, source=data_source)
             if test.is_test_tagged():

@@ -59,5 +59,10 @@ class Tests:
 
     def dump_rooms_to_test(self):
         rooms_tests = deepcopy(self.tests)
-        rooms_tests = [test for test in rooms_tests if "2/3/4 חדרים" not in test.raw_input.text]
+        rooms_tests = [test for test in rooms_tests if
+                       "2/3/4 חדרים" not in test.raw_input.text and
+                       "אננדה" not in test.raw_input.text]
+        # 2/3/4 - filter out generic posts for multiple sublet options
+        # ananda - מסבלט את חדרי הקסום בדירה מהממת ביפו. 200 מ' מהים. עם שותפות חמודות וגוד וייבז
+
         return [(test.raw_input.text, test.gt.rooms) for test in rooms_tests]
