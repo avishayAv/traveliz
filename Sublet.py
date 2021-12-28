@@ -20,7 +20,7 @@ class Sublet:
 
 class Facebook(Sublet):
     def __init__(self, post_url, location, prices, max_people, images, rooms,
-                 post_time: datetime, start_date: datetime, end_date: datetime, phones: [str]):
+                 post_time: datetime, start_date: datetime, end_date: datetime, phones: set):
         super().__init__(location, prices, max_people, images, rooms)
         self.post_url = post_url
         self.post_time = post_time

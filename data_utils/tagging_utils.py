@@ -235,9 +235,9 @@ def create_tests_from_tagged_excel():
             if phone_number is None or 'phone' in phone_number:
                 phone_number = None
             elif phone_number.isnumeric():
-                phone_number = [add_zero(phone_number)]
+                phone_number = {add_zero(phone_number)}
             else:
-                phone_number = [add_zero(x) for x in phone_number.split(',')]
+                phone_number = set([add_zero(x) for x in phone_number.split(',')])
 
             start_date = date_str_to_datetime(tagged_item['Start_date'])
             end_date = date_str_to_datetime(tagged_item['End_date'])
@@ -273,7 +273,7 @@ def create_tests_from_tagged_excel():
                 group_name, post_date, sender_phone = tagged_item['Group_name/Post_date/Post_phone'].split('\n')
                 raw_input = TestRawInput(location=whatsapp_group_to_location[group_name],
                                          text=tagged_item['Text'],
-                                         post_time=datetime.strptime(post_date, '%Y-%m-%d').date(),
+                                         post_time=datetime.strptime(post_date, '%Y-%m-%d'),
                                          phone_number=sender_phone)
             test = Test(gt=gt, raw_input=raw_input, source=data_source)
             if test.is_test_tagged():

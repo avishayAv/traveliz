@@ -11,7 +11,7 @@ class TestGroundTruth:
     start_date: datetime.date = None
     end_date: datetime.date = None
     price: {str: int} = None
-    phone_number: [str] = None
+    phone_number: set = None
     location: str = None
     rooms: Rooms = None
 

@@ -5,9 +5,10 @@ import re
 
 from DateParser import DatePatterns, DateReg
 from FacebookGroup import FacebookGroups
+from HyperParams import get_location_hyper_params
 from RoomsParser import RoomsParser
 from Sublet import Rooms
-from utils import remove_time_stamp_from_text, get_hebrew_to_real_number
+from utils import remove_time_stamp_from_text, get_hebrew_to_real_number, get_hex_unicode
 
 
 # TODO [AA + YG] : refactor + standartize
@@ -18,7 +19,7 @@ def searching_for_sublet(title, text):
 
 
 def parse_phone_number(title, text):
-    phones = []
+    phones = set()
     if title is None:
         title = ''
     text = title + text
@@ -32,10 +33,11 @@ def parse_phone_number(title, text):
             continue
         phone_num = text[match.start():match.end()].replace('972', '0').replace('-', '')
         if 9 <= len(phone_num) <= 10:
-            phones.append(phone_num)
+            phones.add(phone_num)
         # TODO [YG]: bug need to be fixed
         masked_text = text[:match.start()] + text[match.end():]
-    return list(set(phones)), masked_text
+
+    return phones, masked_text
 
 
 def parse_price(text, listing_price):
@@ -50,9 +52,9 @@ def parse_price(text, listing_price):
     def find_description(word):
         return word.replace(',', '')
 
-    pattern = r'[1-9]\d?,?\d{1,3}0'
-    meter_pattern = r'מ"ר|מר|מטר|מגה'
-    meter_pattern += "|מ'"
+    pattern = r'\D[1-9]\d?,?\d{1,3}0\D'
+    meter_pattern = "|".join(
+        [get_hex_unicode('מטר'), get_hex_unicode('מר'), get_hex_unicode('מ"ר'), get_hex_unicode("מ'")])
     if listing_price is not None:
         text = listing_price
     text = re.sub(r"\s+|\(|\)", " ", text)
@@ -64,9 +66,10 @@ def parse_price(text, listing_price):
     prices = {}
     price_to_symbol = {}
     for i, match in enumerate(re.finditer(pattern, text)):
-        if (match.start() - 1 >= 0 and text[match.start() - 1].isnumeric()) or (
-                match.end() < len(text) and text[match.end()].isnumeric()):
-            continue
+        # # TODO [YG]: use hex unicode to pass test
+        # if (match.start() - 1 >= 0 and text[match.start() - 1].isnumeric()) or (
+        #         match.end() < len(text) and text[match.end()].isnumeric()):
+        #     continue
         # avoid index error
         if match.end() == len(text):
             next_words = ['', '']
@@ -108,7 +111,7 @@ class ParseLocation:
             self.zip_code_to_location[zip1] = location
 
     def get_location(self, title, text, group_id, listing_location, city=None):
-        def clean_and_match(sub_text, decrease=0.0, similarity_th=0.85):
+        def clean_and_match(sub_text, decrease=0.0, similarity_th=get_location_hyper_params.similarity_th):
             res = match(sub_text, similarity_th, decrease=0 + decrease)
             if sub_text.startswith('ב'):
                 res += match(sub_text[1:], similarity_th, decrease=-0.03 + decrease)
@@ -127,8 +130,9 @@ class ParseLocation:
                     place, place_in_english = place, ''
                 if place == sub_text:
                     similarity = 1
+
                     if place == 'תל אביב':
-                        similarity += 0.01
+                        similarity += get_location_hyper_params.tel_aviv_priority
                 else:
                     similarity = 0
                 if similarity > similarity_th:
@@ -167,13 +171,15 @@ class ParseLocation:
         for word in words:
             if 'רחוב' in prev_word:
                 continue
-            optional_places.extend(clean_and_match(word, decrease=0.05 if prev_word == 'ליד' else 0.0))
+            optional_places.extend(clean_and_match(word,
+                                                   decrease=get_location_hyper_params.prev_word_decrease if prev_word == 'ליד' else 0.0))
             prev_word = word
         for word1, word2 in zip(words[:-1], words[1:]):
             if 'רחוב' in prev_word:
                 continue
             optional_places.extend(
-                clean_and_match(' '.join([word1, word2]), decrease=0.05 if prev_word == 'ליד' else 0.0))
+                clean_and_match(' '.join([word1, word2]),
+                                decrease=get_location_hyper_params.prev_word_decrease if prev_word == 'ליד' else 0.0))
             prev_word = word1
         if not optional_places:
             return None
@@ -185,6 +191,7 @@ class ParseLocation:
         street = None
         if city in ['תל אביב', 'ירושלים', 'חיפה']:
             street = self.get_location(title, text, group_id, listing_location, city)
+        # TODO [YG]: change to dataclass
         return {'city': city, 'street': street}
 
 
