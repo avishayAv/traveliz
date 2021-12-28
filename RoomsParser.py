@@ -1,7 +1,5 @@
-from utils import get_hex_unicode, get_hebrew_to_real_number
+from utils import get_hex_unicode, allow_multiple_string_options
 
-def allow_multiple_string_options(keywords):
-    return "(" + '|'.join(keywords) + ")"
 
 class RoomsParser:
     def __init__(self):
