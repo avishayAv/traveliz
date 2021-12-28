@@ -11,8 +11,10 @@ class TestPriceParser(unittest.TestCase):
                                  listing_price=test.raw_input.price)
             prices = [x[0] for x in prices.values()]
             if test.gt.price is None:
-                test.gt.price = []
-            self.assertEqual(prices, test.gt.price)
+                test.gt.price = set()
+            else:
+                test.gt.price = set(test.gt.price.values())
+            self.assertSetEqual(set(prices), test.gt.price)
 
 
 if __name__ == '__main__':

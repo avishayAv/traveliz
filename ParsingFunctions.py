@@ -19,14 +19,23 @@ def searching_for_sublet(title, text):
 
 def parse_phone_number(title, text):
     phones = []
+    if title is None:
+        title = ''
     text = title + text
-    text.replace('+972', '0')
-    pattern = r'\d{3}-?[0-9]+-?[0-9]+-?[0-9]+'
+    pattern1 = r'0\d{2}-?[0-9]+-?[0-9]+-?[0-9]+'
+    pattern2 = r'972\d{2}-?[0-9]+-?[0-9]+-?[0-9]+'
     masked_text = text
-    for match in re.finditer(pattern, text):
-        phones.append(text[match.start():match.end()].replace('972', '0').replace('-', ''))
+    for match in list(re.finditer(pattern1, text)) + list(re.finditer(pattern2, text)):
+
+        if (match.start() - 1 >= 0 and text[match.start() - 1].isnumeric()) or (
+                match.end() < len(text) and text[match.end()].isnumeric()):
+            continue
+        phone_num = text[match.start():match.end()].replace('972', '0').replace('-', '')
+        if 9 <= len(phone_num) <= 10:
+            phones.append(phone_num)
+        # TODO [YG]: bug need to be fixed
         masked_text = text[:match.start()] + text[match.end():]
-    return phones, masked_text
+    return list(set(phones)), masked_text
 
 
 def parse_price(text, listing_price):
@@ -41,8 +50,9 @@ def parse_price(text, listing_price):
     def find_description(word):
         return word.replace(',', '')
 
-    pattern = r'\D[1-9],?\d{1,2}0\D'
-    meter_pattern = r'מ"ר|מר|מטר'
+    pattern = r'[1-9]\d?,?\d{1,3}0'
+    meter_pattern = r'מ"ר|מר|מטר|מגה'
+    meter_pattern += "|מ'"
     if listing_price is not None:
         text = listing_price
     text = re.sub(r"\s+|\(|\)", " ", text)
@@ -50,22 +60,27 @@ def parse_price(text, listing_price):
         year = str(int(datetime.date.today().year) + i)
         text = re.sub(year, "", text)
     text += ' '
-    words = text.split() + ['', '']  # avoid index error
+
     prices = {}
     price_to_symbol = {}
-    for i, match in enumerate(re.findall(pattern, text)):
+    for i, match in enumerate(re.finditer(pattern, text)):
+        if (match.start() - 1 >= 0 and text[match.start() - 1].isnumeric()) or (
+                match.end() < len(text) and text[match.end()].isnumeric()):
+            continue
+        # avoid index error
+        if match.end() == len(text):
+            next_words = ['', '']
+        else:
+            next_words = text[match.end():].split() + ['']
+        match = text[match.start():match.end()]
         # clean match from spaces
         match = re.sub(r"\s+", "", match)
-        match_index = [i for i in range(len(words)) if match in words[i]]
-        match_index = match_index[0]
-
-        cleaned_match = re.findall(r'\d,?\d{2,3}', match)[0]
-        price = int(cleaned_match.replace(',', ''))
-        next_word = words[match_index + 1]
+        price = int(match.replace(',', ''))
+        next_word = next_words[0]
         symbol = get_symbol(next_word)
 
         if symbol:
-            next_word = words[match_index + 2]
+            next_word = next_words[1]
             price_to_symbol[price] = symbol
         else:
             if len(re.findall(meter_pattern, next_word)) > 0:
@@ -105,8 +120,17 @@ class ParseLocation:
             res = []
             places_in_israel = self.israel_cities_names if city is None else self.city_to_streets[city]
             for place in places_in_israel:
-                place, place_in_english = place
-                similarity = difflib.SequenceMatcher(None, place, sub_text).ratio() - decrease
+                if type(place) is tuple:
+                    assert len(place) == 2
+                    place, place_in_english = place
+                else:
+                    place, place_in_english = place, ''
+                if place == sub_text:
+                    similarity = 1
+                    if place == 'תל אביב':
+                        similarity += 0.01
+                else:
+                    similarity = 0
                 if similarity > similarity_th:
                     res.append((place, similarity))
                 if sub_text.isalpha():
@@ -115,35 +139,39 @@ class ParseLocation:
                         res.append((place, similarity))
             return res
 
-        # extract location from group name
-        if group_id is not None:
-            fb_groups = FacebookGroups().groups
-            optional_places = [x.location for x in fb_groups if x.group_id == group_id and x.location is not None]
-            if len(optional_places) > 0:
-                assert len(optional_places) == 1
-                return optional_places[0]
+        optional_places = []
+        if city is None:
+            # extract location from group name
+            if group_id is not None:
+                fb_groups = FacebookGroups().groups
+                optional_places += [(x.location, 0.99) for x in fb_groups if
+                                    x.group_id == group_id and x.location is not None]
 
-        # extract location from listing location field in facebook
+            # extract location from listing location field in facebook
 
-        if listing_location is not None:
-            if listing_location.isnumeric():
-                if listing_location in self.zip_code_to_location:
-                    # TODO [YG] : check the assumtion that zipcode is correct
-                    return self.zip_code_to_location[listing_location]
-            else:
-                places = clean_and_match(listing_location.casefold(), decrease=0.0)
-                if places:
-                    assert len(places) == 1
-                    return places[0][0]
+            if listing_location is not None:
+                if listing_location.isnumeric():
+                    if listing_location in self.zip_code_to_location:
+                        # TODO [YG] : check the assumtion that zipcode is correct
+                        return self.zip_code_to_location[listing_location]
+                else:
+                    places = clean_and_match(listing_location.casefold(), decrease=0.0)
+                    if places:
+                        assert len(places) == 1
+                        return places[0][0]
 
         words = re.findall(r'\w+', title + text)
         # extract from text
-        optional_places = []
+
         prev_word = ''
         for word in words:
+            if 'רחוב' in prev_word:
+                continue
             optional_places.extend(clean_and_match(word, decrease=0.05 if prev_word == 'ליד' else 0.0))
             prev_word = word
         for word1, word2 in zip(words[:-1], words[1:]):
+            if 'רחוב' in prev_word:
+                continue
             optional_places.extend(
                 clean_and_match(' '.join([word1, word2]), decrease=0.05 if prev_word == 'ליד' else 0.0))
             prev_word = word1
@@ -205,7 +233,6 @@ def try_room_pattern_and_cleanup_text(room_pattern, text, convert_from_hebrew=Fa
 
 
 def extract_rooms_from_text(text):
-    text = remove_time_stamp_from_text(text)
     rooms_parser = RoomsParser()
 
     rooms, masked_text = try_room_pattern_and_cleanup_text(rooms_parser.total_rooms, text)
@@ -264,6 +291,7 @@ class FreeTextParser:
 
     def parse_free_text_to_md(self, post_title='', post_text='', post_time=None, listing_location=None, group_id=None,
                               listing_price=None):
+        post_text = remove_time_stamp_from_text(post_text)
         rooms, masked_text = extract_rooms_from_text(post_text)
         start_date, end_date = extract_dates_from_text(masked_text, post_time)
         location = self.parse_location(post_title, post_text, group_id,

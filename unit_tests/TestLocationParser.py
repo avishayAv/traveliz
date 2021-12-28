@@ -16,7 +16,7 @@ class TestLocationParser(unittest.TestCase):
         for i, test in tqdm(enumerate(tests)):
             location = parse_location(test.raw_input.title, test.raw_input.text,
                                       listing_location=test.raw_input.location, group_id=test.raw_input.group_id)
-            self.assertEqual(location, test.gt.location)
+            self.assertEqual(location['city'], test.gt.location)
         os.chdir(os.path.join(os.getcwd(), 'unit_tests'))
 
 
