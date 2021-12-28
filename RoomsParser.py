@@ -66,7 +66,8 @@ class RoomsParser:
                     get_hex_unicode("שישה"), get_hex_unicode("שבעה"), get_hex_unicode("שמונה"), get_hex_unicode("תשעה"),
                     get_hex_unicode("עשרה"),
                     get_hex_unicode("שתי"), get_hex_unicode("שלוש"), get_hex_unicode("ארבע"), get_hex_unicode("חמש"),
-                    get_hex_unicode("שש"), get_hex_unicode("שבע"), get_hex_unicode("תשע"), get_hex_unicode("עשר")]
+                    get_hex_unicode("שש"), get_hex_unicode("שבע"), get_hex_unicode("תשע"), get_hex_unicode("עשר"),
+                    get_hex_unicode("שניים"), get_hex_unicode("שתיים")]
         return allow_multiple_string_options(keywords)
 
 
