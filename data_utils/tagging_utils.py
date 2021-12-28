@@ -77,12 +77,13 @@ def create_excel_for_whatsapp_data(pkl_path: str = "sublets_from_whatsapp.p",
                                    sheet_name: str = "whatsapp"):
     assert not if_sheet_name_exists(excel_path, sheet_name), f"sheet name {sheet_name} already exists in {excel_path}"
     posts = pkl.load(open(pkl_path, "rb"))
-    text, dates, group_name, start_date, end_date, price, location, location, phone_number, rooms = \
-        [], [], [], [], [], [], [], [], [], [],
+    text, dates, sender_phone, group_name, start_date, end_date, price, location, location, phone_number, rooms = \
+        [], [], [], [], [], [], [], [], [], [], [],
     for key in posts.keys():
         posts_by_group = posts[key]
         text += [x[0] for x in posts_by_group]
         dates += [x[1] for x in posts_by_group]
+        sender_phone += [x[2].phone for x in posts_by_group]
         group_name += [key for _ in posts_by_group]
         start_date += ["start_date" for _ in posts_by_group]
         end_date += ["end_date" for _ in posts_by_group]
@@ -92,7 +93,8 @@ def create_excel_for_whatsapp_data(pkl_path: str = "sublets_from_whatsapp.p",
         rooms += ["rooms" for _ in posts_by_group]
 
     # Create some Pandas dataframes from some data.
-    df1 = pd.DataFrame({'Group_name/Post_date': [x + '\n' + str(y) for x, y in zip(group_name, dates)],
+    df1 = pd.DataFrame({'Group_name/Post_date/Post_phone': [x + '\n' + str(y) + '\n' + str(z).replace('+972', '') for
+                                                            x, y, z in zip(group_name, dates, sender_phone)],
                         'Text': text,
                         'Start_date': start_date,
                         'End_date': end_date,
@@ -177,7 +179,7 @@ def add_rules_to_excel(file_path:str,
     wb.save(file_path)
 
 
-def read_excel_and_create_tagged_df(file_name: str = "data_utils/data_for_tagging.xlsx",
+def read_excel_and_create_tagged_df(file_name: str = "data_for_tagging.xlsx",
                                     name: Optional[str] = None):
     df = read_excel(file_name, name=name)
     for sheet_name, sheet_df in df.items():
@@ -211,7 +213,7 @@ def create_tests_from_tagged_excel():
         return datetime.strptime('/'.join([d, m, y]), '%d/%m/%Y').date()
 
     tests_db = []
-    posts = pkl.load(open("data_utils/random_facebook_posts.pkl", "rb"))
+    posts = pkl.load(open("../data_utils/random_facebook_posts.pkl", "rb"))
     post_id_to_post = {str(x['post_id']): x for x in posts}
     for data_source, tagged_data_df in read_excel_and_create_tagged_df():
         tagged_data_df = tagged_data_df.where(pd.notnull(tagged_data_df), None)
@@ -229,7 +231,7 @@ def create_tests_from_tagged_excel():
                         description += '_'
                     parsed_prices[description] = int(price)
                 prices = parsed_prices
-            phone_number = str(tagged_item['Phone_number']).replace(' ', '')
+            phone_number = str(tagged_item['Phone_number']).replace(' ', '').replace('-', '')
             if phone_number is None or 'phone' in phone_number:
                 phone_number = None
             elif phone_number.isnumeric():
@@ -268,14 +270,15 @@ def create_tests_from_tagged_excel():
                 # self, post_title='', post_text='', post_time=None, listing_location=None, group_id=None
                 # post_text=message['text'], post_time=post_time, listing_location=group_to_location[group_name]
                 # listing_price=None
-                group_name, post_date = tagged_item['Group_name/Post_date'].split('\n')
+                group_name, post_date, sender_phone = tagged_item['Group_name/Post_date/Post_phone'].split('\n')
                 raw_input = TestRawInput(location=whatsapp_group_to_location[group_name],
                                          text=tagged_item['Text'],
-                                         post_time=datetime.strptime(post_date, '%Y-%m-%d').date())
-            test = Test(gt=gt, raw_input=raw_input)
+                                         post_time=datetime.strptime(post_date, '%Y-%m-%d').date(),
+                                         phone_number=sender_phone)
+            test = Test(gt=gt, raw_input=raw_input, source=data_source)
             if test.is_test_tagged():
                 tests_db.append(test)
-    pkl.dump(tests_db, open('unit_tests/test_db.p', 'wb'))
+    pkl.dump(tests_db, open('../unit_tests/test_db.p', 'wb'))
 
 
 if __name__ == '__main__':

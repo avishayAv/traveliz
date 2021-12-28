@@ -31,10 +31,12 @@ class TestRawInput:
 class Test:
     gt: TestGroundTruth
     raw_input: TestRawInput
+    source: str
 
-    def __init__(self, gt, raw_input):
+    def __init__(self, gt, raw_input, source):
         self.gt = gt
         self.raw_input = raw_input
+        self.source = source
 
     def is_test_tagged(self):
         for field in self.gt.__dataclass_fields__:

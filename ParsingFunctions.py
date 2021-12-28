@@ -19,6 +19,8 @@ def searching_for_sublet(title, text):
 
 def parse_phone_number(title, text):
     phones = []
+    if title is None:
+        title = ''
     text = title + text
     pattern1 = r'0\d{2}-?[0-9]+-?[0-9]+-?[0-9]+'
     pattern2 = r'972\d{2}-?[0-9]+-?[0-9]+-?[0-9]+'
