@@ -1,0 +1,20 @@
+[
+  {
+    "postid": "a2",
+    "city": "Givatayim",
+    "lastname": "baba",
+    "email": "test1@gmail.com"
+  },
+    {
+    "postid": "a3",
+    "city": "Bat-Yam",
+    "lastname": "baba2",
+    "email": "test11@gmail.com"
+  },
+    {
+    "postid": "a4",
+    "city": "Givatayim121",
+    "lastname": "baba212",
+    "email": "test121@gmail.com"
+  }
+]
