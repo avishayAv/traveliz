@@ -1,23 +1,17 @@
-import os
 import unittest
-from pathlib import Path
 
-from tqdm import tqdm
+from parameterized import parameterized
 
-from ParsingFunctions import ParseLocation
 from TestsDB import Tests
 
 
 class TestLocationParser(unittest.TestCase):
-    def test_parse_location(self):
-        tests = Tests().tests
-        os.chdir(Path(os.getcwd()).parent)
-        parse_location = ParseLocation()
-        for i, test in tqdm(enumerate(tests)):
-            location = parse_location(test.raw_input.title, test.raw_input.text,
-                                      listing_location=test.raw_input.location, group_id=test.raw_input.group_id)
-            self.assertEqual(location['city'], test.gt.location)
-        os.chdir(os.path.join(os.getcwd(), 'unit_tests'))
+    @parameterized.expand(Tests().dump_locations_to_test())
+    def test_parse_location(self, parse_location, title, text, raw_location, group_id, gt_location):
+        location = parse_location(title, text,
+                                  listing_location=raw_location, group_id=group_id)
+        self.assertEqual(gt_location, location.city,
+                         msg=f'title: {title} \n text: {text} \n raw_location: {raw_location} \n group_id: {group_id}')
 
 
 if __name__ == '__main__':

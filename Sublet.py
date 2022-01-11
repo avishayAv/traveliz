@@ -1,4 +1,5 @@
 import datetime
+from dataclasses import dataclass
 from typing import Union, Optional
 
 
@@ -8,8 +9,14 @@ class Rooms:
         self.shared = False
 
 
+@dataclass
+class Location:
+    city: str
+    street: str
+
+
 class Sublet:
-    def __init__(self, location: {}, prices: Union[int, dict],
+    def __init__(self, location: Location, prices: Union[int, dict],
                  max_people: int, images: [str], rooms: Optional[Union[int, float]]):
         self.location = location
         self.prices = prices
@@ -20,7 +27,7 @@ class Sublet:
 
 class Facebook(Sublet):
     def __init__(self, post_url, location, prices, max_people, images, rooms,
-                 post_time: datetime, start_date: datetime, end_date: datetime, phones: [str]):
+                 post_time: datetime, start_date: datetime, end_date: datetime, phones: set):
         super().__init__(location, prices, max_people, images, rooms)
         self.post_url = post_url
         self.post_time = post_time
