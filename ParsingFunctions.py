@@ -166,8 +166,8 @@ class ParseLocation:
                 else:
                     places = clean_and_match(listing_location.casefold(), decrease=0.0)
                     if places:
-                        assert len(places) == 1
-                        return places[0][0]
+                        ret = sorted(places, key=lambda x: x[1], reverse=True)[0]
+                        return ret[0]
 
         words = re.findall(r'\w+', title + text)
         # extract from text
@@ -202,6 +202,7 @@ class ParseLocation:
 # do not use datefinder - not working well with hebrew
 # TODO [AA] : think about grepping other fields. maybe title if exist?
 def extract_dates_from_text(text, post_time):
+    post_time = post_time.date()
     dates = []
     for date_pattern in DatePatterns().patterns:
         dates_regex = [DateReg(x, date_pattern) for x in re.findall(date_pattern.pattern, text)]

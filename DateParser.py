@@ -115,10 +115,10 @@ class DateReg:
         if self.date_pattern.partially_hebrew:
             date = self.date.split()
             month_to_calendar = DatePatterns.get_months_by_calendar()
-            if not date[1] in month_to_calendar:  # relative char before month
-                date[1] = date[1][1:]
-            assert date[1] in month_to_calendar
-            self.date = date[0] + self.get_seperator() + str(month_to_calendar[date[1]])
+            if not date[-1] in month_to_calendar:
+                date[-1] = date[-1][1:]
+            assert date[-1] in month_to_calendar
+            self.date = ''.join(date[:-1]) + self.get_seperator() + str(month_to_calendar[date[-1]])
 
     def relative_based_time_to_date(self, post_time):
         if self.date_pattern.name == "time_relative_keyword_based_pattern":

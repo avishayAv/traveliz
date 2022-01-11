@@ -2,6 +2,7 @@ import os
 import pickle
 import random
 import time
+from datetime import datetime
 
 from facebook_scraper import get_posts
 from tqdm import tqdm
@@ -52,9 +53,9 @@ def parse_data_from_facebook(dict_of_sublets):
 
         assert post_text is not None
         post_url = sublet['post_url']
-        post_time = sublet['time']
+        post_time = sublet['time'] if sublet['time'] is not None else datetime.datetime.now()
         start_date, end_date, rooms, phones, prices, location, max_people = \
-            parser.parse_free_text_to_md(post_text, post_time,
+            parser.parse_free_text_to_md(post_text=post_text, post_time=post_time,
                                          listing_location=sublet[
                                              'listing_location'] if 'listing_location' in sublet else None
                                          , group_id=group_id
