@@ -64,7 +64,7 @@ class Tests:
         # 2/3/4 - filter out generic posts for multiple sublet options
         # דירות 3 חדרים, 2 חדרים וסטודיו - filter out generic posts for multiple sublet options
         # 24/7 is being figures as a date
-        return [(test.raw_input.text, test.gt.start_date, test.gt.end_date, test.raw_input.post_time.date(), test.source)
+        return [(test.raw_input.text, test.gt.start_date, test.gt.end_date, test.raw_input.post_time, test.source)
                 for test in dates_tests]
 
     def dump_rooms_to_test(self):
