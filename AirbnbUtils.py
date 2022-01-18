@@ -42,7 +42,6 @@ class AirbnbScraper():
 
         os.system('( ' + activate_venv_command + ' && cd ' + airbnb_scraper_dir_path + ' && `' + command + '`)')
 
-
 class AirbnbParser():
     def __init__(self):
         pass
@@ -50,7 +49,7 @@ class AirbnbParser():
     def airbnb_read_data_from_json(self):
         listings = []
         for location in list_of_locations:
-            airbnb_data = self.parse_airbnb_data(location[1] + ".json")
+            airbnb_data = self.parse_airbnb_data('airbnb_data/'+location[1] + ".json")
             listings.extend(airbnb_data)
         return listings
 
@@ -106,6 +105,12 @@ class AirbnbParser():
         return cities[min_index]["english_name"]
 
 
+def main():
+    A=AirbnbParser()
+    A.airbnb_read_data_from_json()
+    pass
 
+if __name__ == "__main__":
+    main()
 
 

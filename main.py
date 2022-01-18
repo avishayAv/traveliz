@@ -11,6 +11,7 @@ from DbHandler import DbHandler
 from ParsingFunctions import *
 from Sublet import Facebook, WhatsApp
 from utils import whatsapp_group_to_location
+from AirbnbUtils import AirbnbParser
 # from whatsapp_utils import download_data_from_groups
 
 def get_data_from_facebook(already_done):
@@ -72,7 +73,6 @@ def parse_rooms_and_dates_from_facebook(post_text, post_time):
     start_date, end_date = extract_dates_from_text(masked_text, post_time)
     return end_date, rooms, start_date
 
-db_handler = DbHandler() # TODO [AA] : build main class
 
 def facebook():
     # Mocking
@@ -120,7 +120,7 @@ def whatsapp():
 
 
 def main():
-    facebook()
+    # facebook()
     # parser = AirbnbParser()
     # res = parser.parse_airbnb_data(json_file_path = "airbnb_data/jlm.json")
     # scraper = AirbnbScraper()
@@ -138,8 +138,9 @@ def main():
     # excel_data_df = pd.read_excel('/Users/eliyasegev/Desktop/Tagged_data.xlsx', sheet_name='Facebook_data')
     # for column in excel_data_df.columns.ravel():
     # print(column, ": " + str(excel_data_df[column].tolist()))
-
     # sublets.extend(facebook())
+    A=AirbnbParser()
+    data=A.airbnb_read_data_from_json()
     pass
 
 
