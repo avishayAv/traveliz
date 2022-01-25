@@ -202,7 +202,7 @@ class ParseLocation:
 # do not use datefinder - not working well with hebrew
 # TODO [AA] : think about grepping other fields. maybe title if exist?
 def extract_dates_from_text(text, post_time):
-    post_time = post_time.date()
+    post_time = post_time.date() if isinstance(post_time, datetime.datetime) else post_time # TODO [AA] : make one-flow
     dates = []
     for date_pattern in DatePatterns().patterns:
         dates_regex = [DateReg(x, date_pattern) for x in re.findall(date_pattern.pattern, text)]

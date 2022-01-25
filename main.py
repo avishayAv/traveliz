@@ -11,7 +11,7 @@ from DbHandler import DbHandler
 from ParsingFunctions import *
 from Sublet import Facebook, WhatsApp
 from utils import whatsapp_group_to_location
-# from whatsapp_utils import download_data_from_groups
+from whatsapp_utils import download_data_from_groups
 
 def get_data_from_facebook(already_done):
     fb_groups = FacebookGroups().groups
@@ -109,8 +109,8 @@ def parse_data_from_whatsapp(data):
                 phone = message['sender']
                 # TODO [YG] : parse images by phone number
                 sublets[group_name].append([message['text'], post_time,
-                                            WhatsApp(location, prices, max_people, None, rooms, phone, start_date,
-                                                     end_date)])
+                                            WhatsApp(location, prices, max_people, None, rooms, post_time, phone,
+                                                     start_date, end_date)])
     return sublets
 
 def whatsapp():
@@ -120,7 +120,7 @@ def whatsapp():
 
 
 def main():
-    facebook()
+    # facebook()
     # parser = AirbnbParser()
     # res = parser.parse_airbnb_data(json_file_path = "airbnb_data/jlm.json")
     # scraper = AirbnbScraper()
@@ -130,7 +130,7 @@ def main():
     # ws['A1'] = a[2]['text']
     # create_excel_for_tagging_data()
     # posts_dict = read_excel_end_create_dict_of_tagged_data(name="facebook_posts_1")
-    # if not os.path.exists('sublets_from_whatsapp.p'):
+    # if True:#not os.path.exists('sublets_from_whatsapp.p'):
     #     pickle.dump(whatsapp(), open('sublets_from_whatsapp.p', 'wb'))
     # else:
     #     x = pickle.load(open('sublets_from_whatsapp.p', 'rb'))

@@ -57,8 +57,9 @@ class Airbnb(Sublet):
 
 
 class WhatsApp(Sublet):
-    def __init__(self, location, prices, max_people, images, rooms, phone, start_date, end_date):
+    def __init__(self, location, prices, max_people, images, rooms, post_time, phone, start_date, end_date):
         super().__init__(location, prices, max_people, images, rooms)
+        self.post_time = post_time
         self.phone = phone
         self.start_date = start_date
         self.end_date = end_date
