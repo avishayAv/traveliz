@@ -1,7 +1,8 @@
-import datetime
 import pymysql
+import datetime
 
-class DbHandler:
+
+class DbHandler(object):
     # Config
     HOST_NAME = "traveliz2.c7izxvnjnup5.us-east-1.rds.amazonaws.com"
     USER_NAME = "admin"
@@ -10,58 +11,40 @@ class DbHandler:
     DB_NAME = "Traveliz"
 
     def __init__(self):
-        self.connection = pymysql.connect(host=self.HOST_NAME,
-                             user=self.USER_NAME,
-                             password=self.PASSWORD,
-                             database=self.DB_NAME,
-                             cursorclass=pymysql.cursors.DictCursor)
+        self.connection = pymysql.connect(
+                            host=self.HOST_NAME,
+                            user=self.USER_NAME,
+                            password=self.PASSWORD,
+                            database=self.DB_NAME
+                                         )
+        self.cursor = self.connection.cursor()
 
-    def dump_to_facebook_raw(self, fb_sublets):
-        c = self.connection.cursor()
+    @staticmethod
+    def insert_into_string(table_name, columns):
+        values = '%s,' * columns.count(',') + '%s'
+        sql = f"""
+          INSERT INTO {table_name} ({columns}) 
+          VALUES ({values})
+          """
+        return sql
 
-        flat_fb_sublets = []
-        for sublet in fb_sublets:
-            flat_sublet = (  # Shared data
-                datetime.datetime.now(),
-                sublet.location.city,
-                None,  # price_per_night int     # TODO [AA+YG] : handle price
-                None,  # discounted_price_per_night int  # TODO [AA+YG] : handle price
-                None,  # discounted_period int   # TODO [AA+YG] : handle price
-                None,  # minimum_period int  # TODO [AA+YG] : handle price
-                sublet.max_people,
-                ','.join(sublet.images),
-                sublet.rooms.number,
-                sublet.rooms.shared,
+    def close_all(self):
+        self.cursor.close()
+        self.connection.close()
 
-                # Facebook data
-                sublet.location.street,
-                sublet.post_url,
-                sublet.post_time,
-                sublet.start_date,
-                sublet.end_date,
-                ','.join(sublet.phones)
-            )
-            flat_fb_sublets.append(flat_sublet)
+    def truncate_table(self, table):
+        self.cursor.execute("truncate table %s" % table)
 
-        c.executemany("""INSERT INTO FaceGroupsRaw (insert_date,
-                      location_city,
-                      price_per_night,
-                      discounted_price_per_night,
-                      discounted_period,
-                      minimum_period,
-                      max_people,
-                      images,
-                      rooms_number,
-                      rooms_shared,
-                      location_street,
-                      post_url,
-                      post_time,
-                      start_date,
-                      end_date,
-                      phones)
-                      VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""", flat_fb_sublets)
-        # TODO [RS] : investigate %s/%d
-        # TODO [RS] : DB currently cannot handle hebrew - handle encoding
+    def add_column(self, table, column_name, column_type):
+        self.cursor.execute("ALTER TABLE %s ADD %s %s" % (table, column_name, column_type))
 
-        self.connection.commit()
+    def drop_column(self, table, column_name):
+        self.cursor.execute("ALTER TABLE %s DROP COLUMN %s" % (table, column_name))
 
+    def print_describe_table(self, table):
+        self.cursor.execute("SHOW columns FROM %s" % (table))
+        description = self.cursor.fetchall()
+        field_names = [i[0] for i in self.cursor.description]
+        print(field_names)
+        for value in description:
+            print(value)
