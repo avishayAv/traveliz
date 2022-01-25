@@ -10,7 +10,7 @@ from NER.labels_list import label_encoding_dict, intent_to_encoding, label_list
 
 print(torch.cuda.is_available())
 
-pretraining = True
+pretraining = False
 task = "ner"
 model_checkpoint = "onlplab/alephbert-base"
 batch_size = 16
@@ -50,15 +50,20 @@ def tokenize_and_align_labels(examples):
     return tokenized_inputs
 
 
-train_dataset, test_dataset = get_tokens.get_un_token_dataset('NER/splits/sublet_train/',
-                                                              'NER/splits/dev/')
+if pretraining:
+    model = AutoModelForTokenClassification.from_pretrained(model_checkpoint, num_labels=len(label_list))
+    train_file_path = 'NER/splits/train/'
+    dev_file_path = 'NER/splits/dev/'
+
+else:
+    model = AutoModelForTokenClassification.from_pretrained('hebrew-ner.model', num_labels=len(label_list))
+    train_file_path = 'NER/splits/sublet_train/'
+    dev_file_path = 'NER/splits/dev/'
+
+train_dataset, test_dataset = get_tokens.get_un_token_dataset(train_file_path, dev_file_path)
 
 train_tokenized_datasets = train_dataset.map(tokenize_and_align_labels, batched=True)
 test_tokenized_datasets = test_dataset.map(tokenize_and_align_labels, batched=True)
-if pretraining:
-    model = AutoModelForTokenClassification.from_pretrained(model_checkpoint, num_labels=len(label_list))
-else:
-    model = AutoModelForTokenClassification.from_pretrained('hebrew-ner.model', num_labels=len(label_list))
 
 args = TrainingArguments(
     f"test-{task}",

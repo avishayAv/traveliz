@@ -8,6 +8,7 @@ from datasets import Dataset
 
 from NER.labels_list import label_list
 
+nltk.download('punkt')
 
 def get_tokens_and_ner_tags(filename):
     if filename.endswith('bmes'):
