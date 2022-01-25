@@ -1,22 +1,40 @@
 import datetime
 import pymysql
-import DbHandler
+from DbHandler import DbHandler
 
 
 class FacebookSql:
 
     def __init__(self):
-        self.connection = DbHandler()
-        self.cursor = self.connection.cursor()
+        self.db_handler = DbHandler()
 
     def dump_to_facebook_raw(self, fb_sublets):
+        FaceGroupsRaw_columns = """
+                      insert_date,
+                      location_city,
+                      price_per_night,
+                      discounted_price_per_night,
+                      discounted_period,
+                      minimum_period,
+                      max_people,
+                      images,
+                      rooms_number,
+                      rooms_shared,
+                      
+                      location_street,
+                      post_url,
+                      post_time,
+                      start_date,
+                      end_date,
+                      phones
+                      """
+
         # Flat Facebook Data
         flat_fb_sublets = []
         for sublet in fb_sublets:
             flat_sublet = (  # Shared data
                 datetime.datetime.now(),
                 sublet.location.city,
-                sublet.location.street,
                 None,  # price_per_night int     # TODO [AA+YG] : handle price
                 None,  # discounted_price_per_night int  # TODO [AA+YG] : handle price
                 None,  # discounted_period int   # TODO [AA+YG] : handle price
@@ -27,6 +45,7 @@ class FacebookSql:
                 sublet.rooms.shared,
 
                 # Facebook data
+                sublet.location.street,
                 sublet.post_url,
                 sublet.post_time,
                 sublet.start_date,
@@ -35,28 +54,8 @@ class FacebookSql:
             )
             flat_fb_sublets.append(flat_sublet)
 
-        # insert Facebok data into FaceGroupsRaw
-        self.cursor.executemany("""
-                      INSERT INTO FaceGroupsRaw (insert_date,
-                      location_city,
-                      location_street,
-                      price_per_night,
-                      discounted_price_per_night,
-                      discounted_period,
-                      minimum_period,
-                      max_people,
-                      images,
-                      rooms_number,
-                      rooms_shared,
-                      post_url,
-                      post_time,
-                      start_date,
-                      end_date,
-                      phones)
-                      VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""", flat_fb_sublets)
-
-        self.connection.commit()
-        self.cursor.close()
-        self.connection.close()
-
-
+        # insert Facebook data into FaceGroupsRaw
+        sql = DbHandler.insert_into_string('FaceGroupsRaw', FaceGroupsRaw_columns)
+        self.db_handler.cursor.executemany(sql, flat_fb_sublets)
+        self.db_handler.connection.commit()
+        self.db_handler.close_all()
