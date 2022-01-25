@@ -24,7 +24,6 @@ class DbHandler:
             flat_sublet = (  # Shared data
                 datetime.datetime.now(),
                 sublet.location.city,
-                sublet.location.street,
                 None,  # price_per_night int     # TODO [AA+YG] : handle price
                 None,  # discounted_price_per_night int  # TODO [AA+YG] : handle price
                 None,  # discounted_period int   # TODO [AA+YG] : handle price
@@ -35,6 +34,7 @@ class DbHandler:
                 sublet.rooms.shared,
 
                 # Facebook data
+                sublet.location.street,
                 sublet.post_url,
                 sublet.post_time,
                 sublet.start_date,
@@ -45,7 +45,6 @@ class DbHandler:
 
         c.executemany("""INSERT INTO FaceGroupsRaw (insert_date,
                       location_city,
-                      location_street,
                       price_per_night,
                       discounted_price_per_night,
                       discounted_period,
@@ -54,6 +53,7 @@ class DbHandler:
                       images,
                       rooms_number,
                       rooms_shared,
+                      location_street,
                       post_url,
                       post_time,
                       start_date,
