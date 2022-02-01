@@ -21,7 +21,7 @@ class TestAirbnbParser(unittest.TestCase):
         self.assertNotEqual(calendar, []), f"calander shouldn't be empty"
 
 
-    @parameterized.expand([[x] for x in pickle.load(open("test_airbnb_db.p","rb"))])
+    @parameterized.expand([[x] for x in pickle.load(open("../test_airbnb_db.p", "rb"))])
     def test_airbnb_parser(self,listing):
         self.assertNotEqual(listing, None), f"listing shouldn't be None"
         self.assertNotEqual(listing.location, "")

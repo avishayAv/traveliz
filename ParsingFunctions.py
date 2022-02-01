@@ -71,6 +71,7 @@ def parse_price(text, listing_price, city, shared_apt, period):
             next_words = ['', '']
         else:
             next_words = text[match.end():].split() + ['']
+        prev_words = " ".join(text[:match.start()].split()[-2:])
         match = text[match.start():match.end()]
         # clean match from spaces
         match = re.sub(r"\D+", "", match)
@@ -86,7 +87,7 @@ def parse_price(text, listing_price, city, shared_apt, period):
             next_words = next_words[1:]
 
         next_words = " ".join(next_words[:4])
-        final_price.set_price(next_words, price, city, shared_apt, period)
+        final_price.set_price(prev_words + " " + next_words, price, city, shared_apt, period)
 
     return final_price
 

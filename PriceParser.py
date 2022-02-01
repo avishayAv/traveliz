@@ -5,7 +5,9 @@ from dataclasses import dataclass
 @dataclass
 class Price:
     month_thresholds = {'תל אביב': 2000,
-                        'חיפה': 2500}
+                        'חיפה': 2500,
+                        'אחיטוב': 2000}
+    # TODO [YG] : a certain Tel-Aviv test from TestPrice/Location is catched as Ahituv (st.), please fix and delete from this dict
 
     def __init__(self):
         self.price_per_night = None
@@ -15,13 +17,13 @@ class Price:
         self.price_per_month = None
         self.price_per_weekend = None
 
-    def set_price(self, next_words, price, city, shared_apt, period):
+    def set_price(self, area_words, price, city, shared_apt, period):
         found_pattern = False
         for price_pattern in PeriodPatterns.patterns:
-            if re.search(price_pattern.pattern, next_words):
+            if re.search(price_pattern.pattern, area_words):
                 found_pattern = True
                 if price_pattern.period == Period.DAY:
-                    if re.search(PeriodPatterns.period_pattern.pattern, next_words):
+                    if re.search(PeriodPatterns.period_pattern.pattern, area_words):
                         self.discounted_price_per_night = price
                         self.discounted_period = period
                         break
@@ -75,7 +77,7 @@ class PeriodPattern:
 
 
 class PeriodPatterns:
-    period_pattern = PeriodPattern(r'לתקופה|כל התקופה|לכל הימים', Period.PERIOD)
+    period_pattern = PeriodPattern(r'לתקופה|כל התקופה|לכל הזמן|לכל הימים', Period.PERIOD)
 
     patterns = [PeriodPattern(r'ללילה|ליום', Period.DAY),
                 PeriodPattern(r'לשבוע', Period.WEEK),
