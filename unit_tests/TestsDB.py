@@ -44,8 +44,12 @@ class Test:
     def is_test_tagged(self):
         for field in self.gt.__dataclass_fields__:
             value = getattr(self.gt, field)
-            if field != 'rooms' and value is not None:
+            if field != 'rooms' and field != 'price' and value is not None:
                 return True
+            if field == 'price':
+                for price_field in value.__dataclass_fields__:
+                    if price_field is not None:
+                        return True
         return False
 
 
@@ -82,10 +86,15 @@ class Tests:
                 self.tests]
 
     def dump_prices_to_test(self):
-        return [(test.raw_input.text, test.raw_input.title, test.raw_input.price, test.gt.price) for test in
+        os.chdir(Path(os.getcwd()).parent)
+        parse_location = ParseLocation()
+        os.chdir(os.path.join(os.getcwd(), 'unit_tests'))
+        return [(test.raw_input.text, test.raw_input.title, test.raw_input.price, test.gt.price,
+                 test.raw_input.location, test.raw_input.group_id, parse_location, test.raw_input.post_time) for test in
                 self.tests]
 
     def dump_locations_to_test(self):
+        # TODO [YG] : remove all os.chdir from the code
         os.chdir(Path(os.getcwd()).parent)
         parse_location = ParseLocation()
         os.chdir(os.path.join(os.getcwd(), 'unit_tests'))

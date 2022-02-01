@@ -29,6 +29,8 @@ class DbHandler:
                 None,  # discounted_price_per_night int  # TODO [AA+YG] : handle price
                 None,  # discounted_period int   # TODO [AA+YG] : handle price
                 None,  # minimum_period int  # TODO [AA+YG] : handle price
+                None,  # price_per_month int  # TODO [AA+YG] : handle price
+                None,  # price_per_weekend int  # TODO [AA+YG] : handle price
                 sublet.max_people,
                 ','.join(sublet.images),
                 sublet.rooms.number,
@@ -50,6 +52,8 @@ class DbHandler:
                       discounted_price_per_night,
                       discounted_period,
                       minimum_period,
+                      price_per_month,
+                      price_per_weekend,
                       max_people,
                       images,
                       rooms_number,

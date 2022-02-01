@@ -120,7 +120,7 @@ def whatsapp():
 
 
 def main():
-    # facebook()
+    facebook()
     # parser = AirbnbParser()
     # res = parser.parse_airbnb_data(json_file_path = "airbnb_data/jlm.json")
     # scraper = AirbnbScraper()

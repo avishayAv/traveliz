@@ -2,6 +2,8 @@ import datetime
 from dataclasses import dataclass
 from typing import Union, Optional
 
+from PriceParser import Price
+
 
 class Rooms:
     def __init__(self):
@@ -16,10 +18,10 @@ class Location:
 
 
 class Sublet:
-    def __init__(self, location: Location, prices: Union[int, dict],
+    def __init__(self, location: Location, price: Price,
                  max_people: int, images: [str], rooms: Optional[Union[int, float]]):
         self.location = location
-        self.prices = prices
+        self.prices = price
         self.max_people = max_people
         self.images = images  # TODO : use images_description from facebook
         self.rooms = rooms
