@@ -1,4 +1,5 @@
 import os
+import time
 from datetime import datetime
 from time import sleep
 from timeit import default_timer as timer
@@ -181,6 +182,8 @@ def user_is_logged_in(driver, wait_time):
 
 def load_selected_chat(driver):
     '''Loads entire chat history by repeatedly scrolling up to fetch more data from WhatsApp'''
+    print('waiting a little bit')
+    time.sleep(120) # TODO [YG] : find better solution for history sync in whatsup group
     start = timer()
     print("Loading messages...", end="\r")
 

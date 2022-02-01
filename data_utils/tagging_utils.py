@@ -13,6 +13,7 @@ from openpyxl.styles.differential import DifferentialStyle
 from styleframe import StyleFrame
 
 from ParsingFunctions import searching_for_sublet
+from PriceParser import Price
 from Sublet import Rooms
 from unit_tests.TestsDB import TestGroundTruth, TestRawInput, Test
 from utils import whatsapp_group_to_location
@@ -219,18 +220,25 @@ def create_tests_from_tagged_excel():
         tagged_data_df = tagged_data_df.where(pd.notnull(tagged_data_df), None)
 
         for _, tagged_item in tagged_data_df.iterrows():
-
+            price = Price()
             prices = tagged_item['Price']
             if prices is None or 'price' in prices:
                 prices = None
             else:
-                parsed_prices = {}
                 for p in prices.split(','):
-                    price, description = p.split()
-                    while description in parsed_prices:
-                        description += '_'
-                    parsed_prices[description] = int(price)
-                prices = parsed_prices
+                    amount, description = p.split()
+                    if description == 'd':
+                        price.price_per_night = int(amount)
+                    elif description == 'e': # weekend
+                        price.price_per_weekend = int(amount)
+                    elif description == 'w':
+                        price.discounted_price_per_night = int(amount) // 7
+                        price.discounted_period = 7
+                    elif description == 'm':
+                        price.price_per_month = int(amount)
+                    else: # period
+                        price.discounted_price_per_night = int(amount) // int(description)
+                        price.discounted_period = int(description)
             phone_number = str(tagged_item['Phone_number']).replace(' ', '').replace('-', '')
             if phone_number is None or 'phone' in phone_number:
                 phone_number = None
@@ -257,7 +265,7 @@ def create_tests_from_tagged_excel():
                 location = None
             gt = TestGroundTruth(start_date=start_date,
                                  end_date=end_date,
-                                 price=prices, location=location,
+                                 price=price, location=location,
                                  phone_number=phone_number, rooms=rooms)
             if data_source == 'facebook':
                 post = post_id_to_post[str(tagged_item['Post_id'])]

@@ -6,8 +6,9 @@ import re
 from DateParser import DatePatterns, DateReg
 from FacebookGroup import FacebookGroups
 from HyperParams import get_location_hyper_params
+from PriceParser import PriceParser, PeriodPatterns, Period
 from RoomsParser import RoomsParser
-from Sublet import Rooms, Location
+from Sublet import Rooms, Location, Price
 from utils import remove_time_stamp_from_text, get_hebrew_to_real_number, main_locations_to_cities
 
 
@@ -40,9 +41,9 @@ def parse_phone_number(title, text):
     return phones, masked_text
 
 
-def parse_price(text, listing_price):
+def parse_price(text, listing_price, city, shared_apt, period):
     def get_symbol(word):
-        shekel_pattern = r'₪|שקל|ils|ש"ח'
+        shekel_pattern = r'₪|שקל|ils|ש"ח|NIS|שקלים'
         dollar_pattern = r'\$|דולר|Dollar'
         for pat in [shekel_pattern, dollar_pattern]:
             if len(re.findall(pat, word)) > 0:
@@ -52,9 +53,10 @@ def parse_price(text, listing_price):
     def find_description(word):
         return word.replace(',', '')
 
-    pattern = r'\D[1-9]\d?,?\d{1,3}0\D'
-    meter_pattern = "|".join(
-        ['מגה', 'מטר', 'מר', 'מ"ר', "מ'"])
+    period = period.days if period else None
+    price_parser = PriceParser()
+    pattern = price_parser.price_pattern
+    meter_pattern = price_parser.meter_pattern
     if listing_price is not None:
         text = listing_price
     text = re.sub(r"\s+|\(|\)", " ", text)
@@ -63,36 +65,31 @@ def parse_price(text, listing_price):
         text = re.sub(year, "", text)
     text += ' '
 
-    prices = {}
-    price_to_symbol = {}
+    final_price = Price()
     for i, match in enumerate(re.finditer(pattern, text)):
-        # # TODO [YG]: use hex unicode to pass test
-        # if (match.start() - 1 >= 0 and text[match.start() - 1].isnumeric()) or (
-        #         match.end() < len(text) and text[match.end()].isnumeric()):
-        #     continue
-        # avoid index error
         if match.end() == len(text):
             next_words = ['', '']
         else:
             next_words = text[match.end():].split() + ['']
+        prev_words = " ".join(text[:match.start()].split()[-2:])
         match = text[match.start():match.end()]
         # clean match from spaces
         match = re.sub(r"\D+", "", match)
         price = int(match.replace(',', ''))
+
         next_word = next_words[0]
+        if len(re.findall(meter_pattern, next_word)) > 0:
+            continue
+
+        # TODO [YG] : convert dollar to shekel
         symbol = get_symbol(next_word)
-
         if symbol:
-            next_word = next_words[1]
-            price_to_symbol[price] = symbol
-        else:
-            if len(re.findall(meter_pattern, next_word)) > 0:
-                continue
-        if price not in prices.values():
-            description = find_description(next_word)
-            prices[f'price_{i}_{description}'] = price
+            next_words = next_words[1:]
 
-    return {k: (v, price_to_symbol.get(v, '₪')) for k, v in sorted(prices.items(), key=lambda x: x[1])}
+        next_words = " ".join(next_words[:4])
+        final_price.set_price(prev_words + " " + next_words, price, city, shared_apt, period)
+
+    return final_price
 
 
 class ParseLocation:
@@ -202,7 +199,7 @@ class ParseLocation:
 # do not use datefinder - not working well with hebrew
 # TODO [AA] : think about grepping other fields. maybe title if exist?
 def extract_dates_from_text(text, post_time):
-    post_time = post_time.date()
+    post_time = post_time.date() if isinstance(post_time, datetime.datetime) else post_time # TODO [AA] : make one-flow
     dates = []
     for date_pattern in DatePatterns().patterns:
         dates_regex = [DateReg(x, date_pattern) for x in re.findall(date_pattern.pattern, text)]
@@ -312,6 +309,8 @@ class FreeTextParser:
         location = self.parse_location(post_title, post_text, group_id,
                                        listing_location=listing_location)
         phones, masked_text = parse_phone_number(post_title, post_text)
-        prices = parse_price(masked_text, listing_price=listing_price)
+        period = None if start_date is None or end_date is None else end_date-start_date
+        prices = parse_price(masked_text, listing_price=listing_price, city=location.city, shared_apt=rooms.shared,
+                             period=period)
         max_people = 0  # TODO : parse max_people from text
         return start_date, end_date, rooms, phones, prices, location, max_people
