@@ -3,6 +3,8 @@ import difflib
 import json
 import re
 
+from currency_converter import CurrencyConverter
+
 from DateParser import DatePatterns, DateReg
 from FacebookGroup import FacebookGroups
 from HyperParams import get_location_hyper_params
@@ -51,9 +53,7 @@ def parse_price(text, listing_price, city, shared_apt, period):
                 return pat[0]
         return False
 
-    def find_description(word):
-        return word.replace(',', '')
-
+    converter = CurrencyConverter()
     period = period.days if period else None
     price_parser = PriceParser()
     pattern = price_parser.price_pattern
@@ -82,9 +82,10 @@ def parse_price(text, listing_price, city, shared_apt, period):
         if len(re.findall(meter_pattern, next_word)) > 0:
             continue
 
-        # TODO [YG] : convert dollar to shekel
         symbol = get_symbol(next_word)
         if symbol:
+            if symbol == '$':
+                price = converter.convert(price, 'USD', 'ILS')
             next_words = next_words[1:]
 
         next_words = " ".join(next_words[:4])

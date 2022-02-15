@@ -6,7 +6,7 @@ from enum import Enum
 @dataclass
 class Price:
     month_thresholds = {'תל אביב': 2000,
-                        'חיפה': 2500}
+                        'חיפה': 2500, 'יפו': 2000}
 
     def __init__(self):
         self.price_per_night = None
