@@ -35,7 +35,7 @@ jobs:
       run: |
         cd data_utils
         python tagging_utils.py
-        cd ../tagging_utils.py
+        cd ../unit_tests
         python -m unittest TestAirbnbParser.py
         python -m unittest TestDateParser.py
         python -m unittest TestLocationParser.py
