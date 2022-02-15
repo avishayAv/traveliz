@@ -1,12 +1,11 @@
 from pathlib import Path
 
 
-def choose_root(*paths):
+def choose_root(*paths, raise_exception=True):
     for path in paths:
         path = Path(path)
         if path.exists():
             return path
-    raise Warning('No appropriate root found.')
 
 
 REPOSITORY_ROOT = choose_root(r'C:\Users\Y\PycharmProjects\traveliz', '/home/runner/work/traveliz/traveliz/')
