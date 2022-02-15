@@ -6,9 +6,10 @@ import re
 from DateParser import DatePatterns, DateReg
 from FacebookGroup import FacebookGroups
 from HyperParams import get_location_hyper_params
-from PriceParser import PriceParser, PeriodPatterns, Period
+from PriceParser import PriceParser
 from RoomsParser import RoomsParser
 from Sublet import Rooms, Location, Price
+from paths import REPOSITORY_ROOT
 from utils import remove_time_stamp_from_text, get_hebrew_to_real_number, main_locations_to_cities
 
 
@@ -95,11 +96,11 @@ def parse_price(text, listing_price, city, shared_apt, period):
 class ParseLocation:
     def __init__(self):
 
-        israel_cities = json.load(open('israel_cities.json', encoding='utf8'))
+        israel_cities = json.load(open(REPOSITORY_ROOT / 'israel_cities.json', encoding='utf8'))
         self.israel_cities_names = [(x['name'], x['english_name']) for x in israel_cities]
-        self.city_to_streets = json.load(open('city_to_streets.json'))
+        self.city_to_streets = json.load(open(REPOSITORY_ROOT / 'city_to_streets.json'))
         self.main_locations_to_cities = main_locations_to_cities
-        israel_postal = json.load(open('israel_postal.json', encoding='utf8'))
+        israel_postal = json.load(open(REPOSITORY_ROOT / 'israel_postal.json', encoding='utf8'))
         self.zip_code_to_location = {}
         for dict1 in israel_postal:
             if 'zip' not in dict1:
@@ -108,98 +109,112 @@ class ParseLocation:
             location = dict1['n']
             self.zip_code_to_location[zip1] = location
 
-    def get_location(self, title, text, group_id, listing_location, city=None):
-        def clean_and_match(sub_text, decrease=0.0, similarity_th=get_location_hyper_params.similarity_th):
-            res = match(sub_text, similarity_th, decrease=0 + decrease)
-            if sub_text.startswith('ב'):
-                res += match(sub_text[1:], similarity_th, decrease=-0.03 + decrease)
-            elif sub_text.startswith('שב'):
-                res += match(sub_text[1:], similarity_th, decrease=-0.07 + decrease)
-            if sub_text in self.main_locations_to_cities:
-                res += [(self.main_locations_to_cities[sub_text], 0.95)]
-            if sub_text.startswith('מ') and sub_text[1:] in self.main_locations_to_cities:
-                res += [(self.main_locations_to_cities[sub_text[1:]], 0.90)]
-            return res
+    def clean_and_match(self, sub_text, city=None, decrease=0.0, similarity_th=get_location_hyper_params.similarity_th):
+        res = self.match(sub_text, city, similarity_th, decrease=0 + decrease)
+        if sub_text.startswith('ב'):
+            res += self.match(sub_text[1:], city, similarity_th, decrease=-0.03 + decrease)
+        elif sub_text.startswith('שב'):
+            res += self.match(sub_text[1:], city, similarity_th, decrease=-0.07 + decrease)
+        if sub_text in self.main_locations_to_cities:
+            res += [(self.main_locations_to_cities[sub_text], 0.95)]
+        if sub_text.startswith('מ') and sub_text[1:] in self.main_locations_to_cities:
+            res += [(self.main_locations_to_cities[sub_text[1:]], 0.90)]
+        return res
 
-        def match(sub_text, similarity_th=0.85, decrease=0.0):
-            res = []
-            places_in_israel = self.israel_cities_names if city is None else self.city_to_streets[city]
-            for place in places_in_israel:
-                if type(place) is tuple:
-                    assert len(place) == 2
-                    place, place_in_english = place
-                else:
-                    place, place_in_english = place, ''
-                if place == sub_text:
-                    similarity = 1
+    def match(self, sub_text, city, similarity_th=0.85, decrease=0.0):
+        res = []
+        places_in_israel = self.israel_cities_names if city is None else self.city_to_streets[city]
+        for place in places_in_israel:
+            if type(place) is tuple:
+                assert len(place) == 2
+                place, place_in_english = place
+            else:
+                place, place_in_english = place, ''
+            if place == sub_text:
+                similarity = 1 - decrease
 
-                    if place == 'תל אביב':
-                        similarity += get_location_hyper_params.tel_aviv_priority
-                else:
-                    similarity = 0
+                if place == 'תל אביב':
+                    similarity += get_location_hyper_params.tel_aviv_priority
+            else:
+                similarity = 0
+            if similarity > similarity_th:
+                res.append((place, similarity))
+            if sub_text.isalpha():
+                similarity = difflib.SequenceMatcher(None, place_in_english, sub_text).ratio() - decrease
                 if similarity > similarity_th:
                     res.append((place, similarity))
-                if sub_text.isalpha():
-                    similarity = difflib.SequenceMatcher(None, place_in_english, sub_text).ratio() - decrease
-                    if similarity > similarity_th:
-                        res.append((place, similarity))
-            return res
+        return res
 
+    def get_city(self, words, group_id, listing_location):
         optional_places = []
-        if city is None:
-            # extract location from group name
-            if group_id is not None:
-                fb_groups = FacebookGroups().groups
-                optional_places += [(x.location, 0.99) for x in fb_groups if
-                                    x.group_id == group_id and x.location is not None]
+        # extract location from group name
+        if group_id is not None:
+            fb_groups = FacebookGroups().groups
+            optional_places += [(x.location, 0.99) for x in fb_groups if
+                                x.group_id == group_id and x.location is not None]
 
-            # extract location from listing location field in facebook
-
-            if listing_location is not None:
-                if listing_location.isnumeric():
-                    if listing_location in self.zip_code_to_location:
-                        # TODO [YG] : check the assumtion that zipcode is correct
-                        return self.zip_code_to_location[listing_location]
-                else:
-                    places = clean_and_match(listing_location.casefold(), decrease=0.0)
-                    if places:
-                        ret = sorted(places, key=lambda x: x[1], reverse=True)[0]
-                        return ret[0]
-
-        words = re.findall(r'\w+', title + text)
-        # extract from text
-
+        # extract location from listing location field in facebook
+        if listing_location is not None:
+            if listing_location.isnumeric():
+                if listing_location in self.zip_code_to_location:
+                    return self.zip_code_to_location[listing_location]
+            else:
+                optional_places += self.clean_and_match(listing_location.casefold(), city=None, decrease=0.05)
         prev_word = ''
         for word in words:
             if 'רחוב' not in prev_word and 'שדרות' not in prev_word:
-                optional_places.extend(clean_and_match(word,
-                                                       decrease=get_location_hyper_params.prev_word_decrease if prev_word == 'ליד' else 0.0))
+                optional_places.extend(self.clean_and_match(word, city=None,
+                                                            decrease=get_location_hyper_params.prev_word_decrease if prev_word == 'ליד' else 0.0))
             prev_word = word
         prev_word = ''
         for word1, word2 in zip(words[:-1], words[1:]):
             if 'רחוב' not in prev_word and 'שדרות' not in prev_word:
                 optional_places.extend(
-                    clean_and_match(' '.join([word1, word2]),
-                                    decrease=get_location_hyper_params.prev_word_decrease if prev_word == 'ליד' else 0.0))
+                    self.clean_and_match(' '.join([word1, word2]), city=None,
+                                         decrease=get_location_hyper_params.prev_word_decrease if prev_word == 'ליד' else 0.0))
             prev_word = word1
         if not optional_places:
             return None
         ret = sorted(optional_places, key=lambda x: x[1], reverse=True)[0]
         return ret[0]
 
+    def get_street(self, words, group_id, listing_location, city):
+        prev_word = ''
+        optional_places = []
+        for word in words:
+            dec = get_location_hyper_params.prev_word_street_decreas if 'רחוב' in prev_word or 'שדרות' in prev_word else 0
+            optional_places.extend(self.clean_and_match(word, city=city,
+                                                        decrease=dec))
+            prev_word = word
+        prev_word = ''
+        for word1, word2 in zip(words[:-1], words[1:]):
+            dec = get_location_hyper_params.prev_word_street_decreas if 'רחוב' in prev_word or 'שדרות' in prev_word else 0
+            optional_places.extend(
+                self.clean_and_match(' '.join([word1, word2]), city=city,
+                                     decrease=dec))
+            prev_word = word1
+        if not optional_places:
+            return None
+        ret = sorted(optional_places, key=lambda x: x[1], reverse=True)[0]
+        return ret[0]
+
+        # extract from text
+
     def __call__(self, title, text, group_id, listing_location):
-        city = self.get_location(title, text, group_id, listing_location)
+        if title is None:
+            title = ''
+        words = re.findall(r'\w+', title + text)
+        city = self.get_city(words, group_id, listing_location)
         street = None
         if city in ['תל אביב', 'ירושלים', 'חיפה']:
-            street = self.get_location(title, text, group_id, listing_location, city)
-        # TODO [YG]: change to dataclass
+            street = self.get_street(words, group_id, listing_location, city)
         return Location(city=city, street=street)
 
 
 # do not use datefinder - not working well with hebrew
 # TODO [AA] : think about grepping other fields. maybe title if exist?
 def extract_dates_from_text(text, post_time):
-    post_time = post_time.date() if isinstance(post_time, datetime.datetime) else post_time # TODO [AA] : make one-flow
+    post_time = post_time.date() if isinstance(post_time, datetime.datetime) else post_time  # TODO [AA] : make one-flow
     dates = []
     for date_pattern in DatePatterns().patterns:
         dates_regex = [DateReg(x, date_pattern) for x in re.findall(date_pattern.pattern, text)]
@@ -227,16 +242,18 @@ def extract_dates_from_text(text, post_time):
     return min(dates), max(dates)
 
 
-def try_room_pattern_and_cleanup_text(room_pattern, text, convert_from_hebrew=False, living_room=None, half_included=False, no_number=False, roommates=False):
+def try_room_pattern_and_cleanup_text(room_pattern, text, convert_from_hebrew=False, living_room=None,
+                                      half_included=False, no_number=False, roommates=False):
     hebrew_to_real_number = get_hebrew_to_real_number()
     grep_rooms = re.findall(room_pattern, text)
     living_room_exist = re.findall(living_room, text) if living_room else None
     if len(grep_rooms) > 0:
-        if no_number:   # single bed room pattern
+        if no_number:  # single bed room pattern
             grep_rooms = [(1, 'bedroom')]
         rooms = Rooms()
         rooms.shared = roommates
-        rooms.number = float(hebrew_to_real_number[grep_rooms[0][0]]) if convert_from_hebrew else float(grep_rooms[0][0])
+        rooms.number = float(hebrew_to_real_number[grep_rooms[0][0]]) if convert_from_hebrew else float(
+            grep_rooms[0][0])
         rooms.number = rooms.number + 1 if living_room_exist else rooms.number
         rooms.number = rooms.number + 0.5 if half_included else rooms.number
         masked_text = re.sub(room_pattern, '', text)
@@ -309,7 +326,7 @@ class FreeTextParser:
         location = self.parse_location(post_title, post_text, group_id,
                                        listing_location=listing_location)
         phones, masked_text = parse_phone_number(post_title, post_text)
-        period = None if start_date is None or end_date is None else end_date-start_date
+        period = None if start_date is None or end_date is None else end_date - start_date
         prices = parse_price(masked_text, listing_price=listing_price, city=location.city, shared_apt=rooms.shared,
                              period=period)
         max_people = 0  # TODO : parse max_people from text

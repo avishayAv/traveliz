@@ -1,5 +1,5 @@
 import datetime
-import pymysql
+
 from DbHandler import DbHandler
 
 

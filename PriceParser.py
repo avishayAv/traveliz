@@ -1,13 +1,12 @@
-from enum import Enum
 import re
 from dataclasses import dataclass
+from enum import Enum
+
 
 @dataclass
 class Price:
     month_thresholds = {'תל אביב': 2000,
-                        'חיפה': 2500,
-                        'אחיטוב': 2000}
-    # TODO [YG] : a certain Tel-Aviv test from TestPrice/Location is catched as Ahituv (st.), please fix and delete from this dict
+                        'חיפה': 2500}
 
     def __init__(self):
         self.price_per_night = None

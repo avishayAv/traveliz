@@ -1,4 +1,3 @@
-import os
 import time
 from datetime import datetime
 from time import sleep
@@ -12,6 +11,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.ui import WebDriverWait
+
+from paths import DRIVER_PATH, CHROME_PROFILE
 
 
 def is_media_in_message(message):
@@ -111,9 +112,6 @@ def setup_selenium():
 
     # Load driver and chrome profile from local directories
     load_dotenv()
-    DRIVER_PATH = os.getenv('DRIVER_PATH')
-    CHROME_PROFILE = os.getenv('CHROME_PROFILE')
-
     # Configure selenium
     options = webdriver.ChromeOptions()
     options.add_argument(f"user-data-dir={CHROME_PROFILE}")
@@ -146,24 +144,6 @@ def whatsapp_is_loaded(driver):
             print(
                 f"Error: WhatsApp did not load within {wait_time} seconds. Make sure you are logged in and let's try again.")
 
-            is_valid_response = False
-            while not is_valid_response:
-                # Ask user if they want to try loading WhatsApp again
-                err_response = input("Proceed (y/n)? ")
-
-                # Try again
-                if err_response.strip().lower() in {'y', 'yes'}:
-                    is_valid_response = True
-                    continue
-                # Abort loading WhatsApp
-                elif err_response.strip().lower() in {'n', 'no'}:
-                    is_valid_response = True
-                    return False
-                # Re-prompt the question
-                else:
-                    is_valid_response = False
-                    continue
-
     # Success
     print("Success! WhatsApp finished loading and is ready.")
     return True
@@ -182,8 +162,8 @@ def user_is_logged_in(driver, wait_time):
 
 def load_selected_chat(driver):
     '''Loads entire chat history by repeatedly scrolling up to fetch more data from WhatsApp'''
-    print('waiting a little bit')
-    time.sleep(120) # TODO [YG] : find better solution for history sync in whatsup group
+    print('loading chat history')
+    time.sleep(15)
     start = timer()
     print("Loading messages...", end="\r")
 
