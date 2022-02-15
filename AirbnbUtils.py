@@ -42,6 +42,7 @@ class AirbnbScraper():
 
         os.system('( ' + activate_venv_command + ' && cd ' + airbnb_scraper_dir_path + ' && `' + command + '`)')
 
+#TODO (ES) use location objecy instead of string
 
 class AirbnbParser():
     def __init__(self):
