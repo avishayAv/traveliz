@@ -33,4 +33,12 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        pytest app.py
+        cd data_utils
+        python tagging_utils.py
+        cd ../unit_tests
+        python -m unittest TestAirbnbParser.py
+        python -m unittest TestDateParser.py
+        python -m unittest TestLocationParser.py
+        python -m unittest TestPhoneParser.py
+        python -m unittest TestPriceParser.py
+        

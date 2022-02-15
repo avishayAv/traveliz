@@ -1,7 +1,8 @@
 import unittest
+import sys
+sys.path.append('../')
 
 from parameterized import parameterized
-
 from ParsingFunctions import extract_dates_from_text, extract_rooms_from_text
 from TestsDB import Tests
 

@@ -1,3 +1,7 @@
+import unittest
+import sys
+sys.path.append('../')
+
 import pickle as pkl
 from datetime import datetime
 from typing import Optional

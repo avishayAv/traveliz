@@ -1,4 +1,7 @@
 import unittest
+import sys
+sys.path.append('../')
+
 from parameterized import parameterized
 from AirbnbUtils import AirbnbParser
 from datetime import datetime
