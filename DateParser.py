@@ -107,9 +107,17 @@ class DateReg:
         else:
             return '.'
 
-    def complete_year(self, post_time):
+    def str_to_date(self, post_time):
         if not self.date_pattern.with_year:
-            self.date = complete_year_by_time_stamp(self.date, post_time, self.get_seperator())
+            self.complete_year(post_time)
+        else:
+            if self.date_pattern.name == "time_relative_keyword_based_pattern":
+                self.relative_based_time_to_date(post_time)
+            else:
+                self.date = dparser.parse(self.date, fuzzy=True, dayfirst=True).date()
+
+    def complete_year(self, post_time):
+        self.date = complete_year_by_time_stamp(self.date, post_time, self.get_seperator())
 
     def hebrew_to_calendar(self):
         if self.date_pattern.partially_hebrew:
@@ -121,9 +129,8 @@ class DateReg:
             self.date = ''.join(date[:-1]) + self.get_seperator() + str(month_to_calendar[date[-1]])
 
     def relative_based_time_to_date(self, post_time):
-        if self.date_pattern.name == "time_relative_keyword_based_pattern":
-            time_keywords_to_time_delta = get_time_keywords_to_time_delta()
-            self.date = post_time + datetime.timedelta(days=time_keywords_to_time_delta[self.date])
+        time_keywords_to_time_delta = get_time_keywords_to_time_delta()
+        self.date = post_time + datetime.timedelta(days=time_keywords_to_time_delta[self.date])
 
     def range_to_dates(self, post_time):
         try:

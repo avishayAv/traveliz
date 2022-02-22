@@ -2,29 +2,36 @@ import os
 import pickle
 import random
 import time
+import argparse
 from datetime import datetime
 
 from facebook_scraper import get_posts
 from tqdm import tqdm
+
+from AirbnbUtils import AirbnbScraper, AirbnbParser
 from FacebookSql import FacebookSql
 
 from DbHandler import DbHandler
 from ParsingFunctions import *
 from Sublet import Facebook, WhatsApp
 from utils import whatsapp_group_to_location
-# from whatsapp_utils import download_data_from_groups
+from whatsapp_utils import download_data_from_groups
+
+FACEBOOK_DATA_PATH = 'data/facebook/'
+WHATSAPP_DATA_PATH = 'data/whatsapp/'
+AIRBNB_DATA_PATH = 'data/airbnb/'
 
 def get_data_from_facebook(already_done):
     fb_groups = FacebookGroups().groups
     fb_groups_list_private = [group.group_id for group in fb_groups if not group.is_public]
     fb_groups_list_public = [group.group_id for group in fb_groups if group.is_public]
-    credentials = [('avishaya67@gmail.com', '0528773202'), ('yishayahug@mail.tau.ac.il', 'w,+L<e8VjmJ+,6Y')]
+    credentials = [('yishayahug@mail.tau.ac.il', 'shaya321#@!!')]
     for fb_group in fb_groups_list_private:
         if fb_group not in already_done:
             group_posts = []
             for post in get_posts(group=fb_group, pages=random.randint(2, 6), credentials=random.choice(credentials),
-                                  options={"progress": True, "posts_per_page": random.randint(50,
-                                                                                              100)}):  # TODO : change number of pages and posts per page + add comments?
+                                  options={"progress": True, "posts_per_page": random.randint(5,
+                                                                                              10)}):  # TODO : change number of pages and posts per page + add comments?
                 group_posts.append(post)
             yield fb_group, group_posts
             time.sleep(random.randint(0, 200))
@@ -32,8 +39,8 @@ def get_data_from_facebook(already_done):
         if fb_group not in already_done:
             group_posts = []
             for post in get_posts(group=fb_group, pages=random.randint(1, 2), credentials=random.choice(credentials),
-                                  options={"progress": True, "posts_per_page": random.randint(50,
-                                                                                              100)}):  # TODO : change number of pages and posts per page + add comments?
+                                  options={"progress": True, "posts_per_page": random.randint(5,
+                                                                                              10)}):  # TODO : change number of pages and posts per page + add comments?
                 group_posts.append(post)
             yield fb_group, group_posts
             time.sleep(random.randint(0, 200))
@@ -73,21 +80,34 @@ def parse_rooms_and_dates_from_facebook(post_text, post_time):
     start_date, end_date = extract_dates_from_text(masked_text, post_time)
     return end_date, rooms, start_date
 
-def facebook():
-    # Mocking
-    dict_of_sublets = pickle.load(open("dict_of_sublets.p", 'rb')) if os.path.exists("dict_of_sublets.p") else {}
-
+def facebook(mode, data):
     # Scarping
-    # for group_id, group_posts in tqdm(get_data_from_facebook(already_done=set(dict_of_sublets.keys())),
-    #                                   desc='extracting groups data'):
-    #     dict_of_sublets[group_id] = group_posts
-    #     pickle.dump(dict_of_sublets, open('dict_of_sublets.p', 'wb'))
+    if mode == 'scrape':
+        dict_of_sublets = {}
+        # TODO [RS] : we are being blocked currently
+        for group_id, group_posts in tqdm(get_data_from_facebook(already_done=set(dict_of_sublets.keys())),
+                                          desc='extracting groups data'):
+            dict_of_sublets[group_id] = group_posts
+            pickle.dump(dict_of_sublets, open(f'{FACEBOOK_DATA_PATH}mock.pickle', 'wb'))
 
-    # Parsing
-    fb_sublets = parse_data_from_facebook(dict_of_sublets)
+    else:
+        # Load pre-scraped data
+        sublets = load_pre_scraped_data(data, FACEBOOK_DATA_PATH)
 
-    # Dump to DB
-    FacebookSql().dump_to_facebook_raw(fb_sublets)
+        # Parsing
+        fb_sublets = parse_data_from_facebook(sublets)
+
+        # Dump to DB
+        # TODO [RS] : change from AWS to new our new A2 DB
+        FacebookSql().dump_to_facebook_raw(fb_sublets)
+
+
+def load_pre_scraped_data(data, path):
+    pickle_path = data if data is not None else f'{path}mock.pickle'
+    if not os.path.exists(pickle_path):
+        print(f'data file does not exist : {pickle_path}')
+        exit(1) # TODO [AA] : wrap in exception
+    return pickle.load(open(pickle_path, 'rb'))
 
 
 def parse_data_from_whatsapp(data):
@@ -112,34 +132,59 @@ def parse_data_from_whatsapp(data):
                                                      start_date, end_date)])
     return sublets
 
-def whatsapp():
-    groups = ['סאבלט בדפנה']
-    data = download_data_from_groups(groups)
-    return parse_data_from_whatsapp(data)
+def whatsapp(mode, data):
+    groups = ['סאבלט בדפנה'] # TODO [YG] : let's find some more groups
+    if mode == 'scrape':
+        sublets = download_data_from_groups(groups) # TODO [YG] : handle chrome versioning
+        pickle.dump(sublets, open(f'{WHATSAPP_DATA_PATH}mock.pickle', 'wb'))
+    else:
+        # Load pre-scraped data
+        sublets = load_pre_scraped_data(data, WHATSAPP_DATA_PATH)
+
+        # Parsing
+        sublets = parse_data_from_whatsapp(sublets)
+
+        # Dump to DB
+        # TODO [RS] : dump sublets tp DB
+        pass
+
+
+def airbnb(mode, data):
+    if mode == 'scrape':
+        scraper = AirbnbScraper()
+        scraper.airbnb_scraper()
+        # TODO [ES] : dump to json (the return value is not json right now)
+    else:
+        # Load pre-scraped data + Paring
+        parser = AirbnbParser()
+        res = parser.parse_airbnb_data(json_file_path=f'{AIRBNB_DATA_PATH}jlm.json')
+
+        # Dump to DB
+        # TODO [RS] : dump json to DB
+        pass
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-source', action='store', required=True, choices=['whatsapp', 'facebook', 'airbnb'],
+                        help='data source')
+    parser.add_argument('-mode', action='store', required=True, choices=['scrape', 'parse'],
+                        help='scrape data to a pickle file or parse pickle file to the DB')
+    parser.add_argument('-data', action='store', required=False, help='pickle file name in case of parsing mode')
+    return parser.parse_args()
 
 
 def main():
-    facebook()
-    # parser = AirbnbParser()
-    # res = parser.parse_airbnb_data(json_file_path = "airbnb_data/jlm.json")
-    # scraper = AirbnbScraper()
-    # scraper.airbnb_scraper()
-    # airbnb_listings = airbnb_read_data_from_json()
-    # sublets = []
-    # ws['A1'] = a[2]['text']
-    # create_excel_for_tagging_data()
-    # posts_dict = read_excel_end_create_dict_of_tagged_data(name="facebook_posts_1")
-    # if not os.path.exists('sublets_from_whatsapp.p'):
-    #     pickle.dump(whatsapp(), open('sublets_from_whatsapp.p', 'wb'))
-    # else:
-    #     x = pickle.load(open('sublets_from_whatsapp.p', 'rb'))
+    args = parse_args()
+    match args.source:
+        case 'whatsapp':
+            whatsapp(args.mode, args.data)
+        case 'facebook':
+            facebook(args.mode, args.data)
+        case 'airbnb':
+            airbnb(args.mode, args.data)
+    exit(0)
 
-    # excel_data_df = pd.read_excel('/Users/eliyasegev/Desktop/Tagged_data.xlsx', sheet_name='Facebook_data')
-    # for column in excel_data_df.columns.ravel():
-    # print(column, ": " + str(excel_data_df[column].tolist()))
-
-    # sublets.extend(facebook())
-    pass
 
 
 if __name__ == "__main__":

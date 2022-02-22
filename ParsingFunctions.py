@@ -205,7 +205,6 @@ def extract_dates_from_text(text, post_time):
         dates_regex = [DateReg(x, date_pattern) for x in re.findall(date_pattern.pattern, text)]
         for date_regex in dates_regex:
             date_regex.hebrew_to_calendar()
-            date_regex.relative_based_time_to_date(post_time)
         dates.extend(dates_regex)
         if (date_pattern.name.startswith('combined') and len(dates) >= 1) or len(dates) >= 2:
             break
@@ -220,7 +219,7 @@ def extract_dates_from_text(text, post_time):
         return range_date.range_to_dates(post_time)
 
     for date in dates:
-        date.complete_year(post_time)
+        date.str_to_date(post_time)
     dates = [inst.date for inst in dates]
     if len(dates) == 1:
         return dates[0], None
