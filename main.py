@@ -4,6 +4,7 @@ import random
 import time
 import argparse
 from datetime import datetime
+from pathlib import Path
 
 from facebook_scraper import get_posts
 from tqdm import tqdm
@@ -13,12 +14,9 @@ from AirbnbUtils import AirbnbScraper, AirbnbParser
 from FacebookSql import FacebookSql
 from ParsingFunctions import *
 from Sublet import Facebook, WhatsApp
+from paths import AIRBNB_DATA_PATH, WHATSAPP_DATA_PATH, FACEBOOK_DATA_PATH
 from utils import whatsapp_group_to_location
 from whatsapp_utils import download_data_from_groups
-
-FACEBOOK_DATA_PATH = 'data/facebook/'
-WHATSAPP_DATA_PATH = 'data/whatsapp/'
-AIRBNB_DATA_PATH = 'data/airbnb/'
 
 def get_data_from_facebook(already_done):
     fb_groups = FacebookGroups().groups
@@ -102,8 +100,8 @@ def facebook(mode, data):
 
 
 def load_pre_scraped_data(data, path):
-    pickle_path = data if data is not None else f'{path}mock.pickle'
-    if not os.path.exists(pickle_path):
+    pickle_path = Path(data if data is not None else f'{path}mock.pickle')
+    if not pickle_path.exists():
         print(f'data file does not exist : {pickle_path}')
         exit(1) # TODO [AA] : wrap in exception
     return pickle.load(open(pickle_path, 'rb'))

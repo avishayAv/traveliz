@@ -13,3 +13,7 @@ REPOSITORY_ROOT = choose_root(r'C:\Users\Y\PycharmProjects\traveliz', r'C:\Users
 DRIVER_PATH = choose_root(REPOSITORY_ROOT / 'chromedriver.exe')
 CHROME_PROFILE = choose_root(r'C:\Users\Y\AppData\Local\Google\Chrome\User Data\Default',
                              r'C:\Users\avishaya\AppData\Local\Google\Chrome\User Data\Default')
+
+FACEBOOK_DATA_PATH = 'data/facebook/'
+WHATSAPP_DATA_PATH = 'data/whatsapp/'
+AIRBNB_DATA_PATH = 'data/airbnb/'
