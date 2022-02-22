@@ -112,6 +112,7 @@ class ParseLocation:
 
     def clean_and_match(self, sub_text, city=None, decrease=0.0, similarity_th=get_location_hyper_params.similarity_th):
         res = self.match(sub_text, city, similarity_th, decrease=0 + decrease)
+        # TODO [YG]: extract hyper-params to different file
         if sub_text.startswith('ב'):
             res += self.match(sub_text[1:], city, similarity_th, decrease=-0.03 + decrease)
         elif sub_text.startswith('שב'):
@@ -179,7 +180,8 @@ class ParseLocation:
         ret = sorted(optional_places, key=lambda x: x[1], reverse=True)[0]
         return ret[0]
 
-    def get_street(self, words, group_id, listing_location, city):
+    def get_street(self, words, city):
+        # TODO [YG]: extract to function
         prev_word = ''
         optional_places = []
         for word in words:
@@ -207,8 +209,9 @@ class ParseLocation:
         words = re.findall(r'\w+', title + text)
         city = self.get_city(words, group_id, listing_location)
         street = None
+        # TODO [YG]: extract
         if city in ['תל אביב', 'ירושלים', 'חיפה']:
-            street = self.get_street(words, group_id, listing_location, city)
+            street = self.get_street(words, city)
         return Location(city=city, street=street)
 
 
