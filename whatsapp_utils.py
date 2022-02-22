@@ -333,7 +333,7 @@ def scrape_chat(driver):
         chat_messages = [
             msg for msg in soup.find("div", driver.find_element_by_xpath(
                 '//*[@id="main"]/div[3]/div/div/div[3]').get_attribute('class')).contents if
-            'message' in " ".join(msg.get('class'))]
+            'message' in " ".join(msg.get('class'))] # TODO [YG] : check failure when there is no new massages
     chat_messages_count = len(chat_messages)
 
     # Get users profile name
