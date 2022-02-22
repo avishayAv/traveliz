@@ -10,7 +10,7 @@ from NER.labels_list import label_encoding_dict, intent_to_encoding, label_list
 
 print(torch.cuda.is_available())
 
-pretraining = False
+pretraining = True
 task = "ner"
 model_checkpoint = "onlplab/alephbert-base"
 batch_size = 16
