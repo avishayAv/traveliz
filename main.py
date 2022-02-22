@@ -6,13 +6,14 @@ from datetime import datetime
 
 from facebook_scraper import get_posts
 from tqdm import tqdm
-from FacebookSql import FacebookSql
 
-from DbHandler import DbHandler
+from FacebookSql import FacebookSql
 from ParsingFunctions import *
 from Sublet import Facebook, WhatsApp
 from utils import whatsapp_group_to_location
 # from whatsapp_utils import download_data_from_groups
+from whatsapp_utils import download_data_from_groups
+
 
 def get_data_from_facebook(already_done):
     fb_groups = FacebookGroups().groups
@@ -119,7 +120,7 @@ def whatsapp():
 
 
 def main():
-    facebook()
+    # facebook()
     # parser = AirbnbParser()
     # res = parser.parse_airbnb_data(json_file_path = "airbnb_data/jlm.json")
     # scraper = AirbnbScraper()
@@ -139,6 +140,7 @@ def main():
     # print(column, ": " + str(excel_data_df[column].tolist()))
 
     # sublets.extend(facebook())
+    whatsapp()
     pass
 
 

@@ -102,12 +102,6 @@
     "latt": 32.53198
   },
   {
-    "name": "אחיטוב",
-    "english_name": "ahituv",
-    "long": 34.99354,
-    "latt": 32.38988
-  },
-  {
     "name": "אור הגנוז",
     "english_name": "or haganuz",
     "long": 35.44577,
@@ -2038,6 +2032,12 @@
     "english_name": "daliyat al-karmel",
     "long": 35.04834,
     "latt": 32.69266
+  },
+  {
+    "name": "דן",
+    "english_name": "dan",
+    "long": 0,
+    "latt": 0
   },
   {
     "name": "האון",
@@ -5584,12 +5584,6 @@
     "english_name": "en habesor",
     "long": 34.50079,
     "latt": 31.3102
-  },
-  {
-    "name": "עידן",
-    "english_name": "iddan",
-    "long": 35.29931,
-    "latt": 30.80384
   },
   {
     "name": "עין המפרץ",
