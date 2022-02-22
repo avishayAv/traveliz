@@ -1,9 +1,7 @@
 import datetime
-import os
 import pickle
 from copy import deepcopy
 from dataclasses import dataclass
-from pathlib import Path
 
 from ParsingFunctions import ParseLocation
 from Sublet import Rooms
@@ -92,9 +90,7 @@ class Tests:
                 self.tests]
 
     def dump_prices_to_test(self):
-        os.chdir(Path(os.getcwd()).parent)
         parse_location = ParseLocation()
-        os.chdir(os.path.join(os.getcwd(), 'unit_tests'))
         price_tests = deepcopy(self.tests)
         price_tests = [test for test in price_tests if
                        "053-902-7197" not in test.raw_input.text and
@@ -106,21 +102,9 @@ class Tests:
                 price_tests]
 
     def dump_locations_to_test(self):
-        # TODO [YG] : remove all os.chdir from the code
-        os.chdir(Path(os.getcwd()).parent)
         parse_location = ParseLocation()
-        os.chdir(os.path.join(os.getcwd(), 'unit_tests'))
         location_tests = deepcopy(self.tests)
-        location_tests = [test for test in location_tests if
-                          "מציע סאבלט בדן דירת שתיים וחצי חדרים" not in test.raw_input.text and
-                          "מסבלט את הדירה שלי במתחם בזל הנעים" not in test.raw_input.text and
-                          "אחיטוב" not in test.raw_input.text and
-                          "נחל עוז" not in test.raw_input.text]
-        # TODO [YG] : 1.sublet in dan-parsed as dafna because it is from dafna group. imo we can tag as dafna (dan is confusing)
-        #  2.Basel is parsed as idan... didn't understand why
-        #  3.Ahituv is a place but also a street - you should handle situations like this...
-        #  maybe we should edit the json and remove unfamiliar places/prio somehow to tel aviv yafo
-        #  4. Nahal Oz is from tel aviv group and parsed as None
+        location_tests = [test for test in location_tests]
         return [(parse_location, test.raw_input.title, test.raw_input.text, test.raw_input.location,
                  test.raw_input.group_id, test.gt.location) for test in
                 location_tests]

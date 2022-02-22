@@ -9,9 +9,8 @@ from facebook_scraper import get_posts
 from tqdm import tqdm
 
 from AirbnbUtils import AirbnbScraper, AirbnbParser
-from FacebookSql import FacebookSql
 
-from DbHandler import DbHandler
+from FacebookSql import FacebookSql
 from ParsingFunctions import *
 from Sublet import Facebook, WhatsApp
 from utils import whatsapp_group_to_location
