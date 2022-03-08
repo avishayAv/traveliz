@@ -20,8 +20,8 @@ class WhatsappSql:
         # Flat Whatsapp Data
         flat_wa_sublets = [] #TODO [RS]: delete text+date form whatsapp class (they are already in the whatsapp object)
         for group in whatsapp_groups_to_scrape_and_parse:
-            for listing in wa_sublets[group]:
-                sublet = listing[2]
+            for sublet in wa_sublets[group]:
+                x = 5
                 flat_sublet = (
                     # Base columns
                     datetime.datetime.now(),    # insert_date

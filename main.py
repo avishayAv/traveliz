@@ -126,17 +126,16 @@ def parse_data_from_whatsapp(data):
                 phone = message['sender']
                 post_text = message['text']
                 # TODO [YG] : parse images by phone number
-                sublets[group_name].append([post_text, post_time, # TODO [RS] : check if we need post_time twice
-                                            WhatsApp(location, prices, max_people, None, rooms, post_time, phone,
-                                                     start_date, end_date,post_text, group_name)])
+                sublets[group_name].append(WhatsApp(location, prices, max_people, None, rooms, post_time, phone,
+                                                     start_date, end_date, post_text, group_name))
     return sublets
 
-def whatsapp(mode, data):
 
+def whatsapp(mode, data):
     if mode == 'scrape':
         sublets = download_data_from_groups(whatsapp_groups_to_scrape_and_parse) # TODO [YG] : handle chrome versioning
         pickle.dump(sublets, open(f'{WHATSAPP_DATA_PATH}mock.pickle', 'wb'))
-
+    if mode == 'parse':
         # Load pre-scraped data
         sublets = load_pre_scraped_data(data, WHATSAPP_DATA_PATH)
 
@@ -144,8 +143,8 @@ def whatsapp(mode, data):
         wa_sublets = parse_data_from_whatsapp(sublets)
         pickle.dump(wa_sublets, open('data/whatsapp/wa_sublets.pickle', "wb"))
 
+    if mode == 'dump':
         # Dump to DB
-    else:
         wa_sublets = pickle.load(open("data/whatsapp/wa_sublets.pickle", "rb"))
         WhatsappSql().dump_to_whatsapp_raw(wa_sublets)
         # TODO [RS] : dump sublets tp DB
@@ -171,7 +170,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-source', action='store', required=True, choices=['whatsapp', 'facebook', 'airbnb'],
                         help='data source')
-    parser.add_argument('-mode', action='store', required=True, choices=['scrape', 'parse'],
+    parser.add_argument('-mode', action='store', required=True, choices=['scrape', 'parse', 'dump'],
                         help='scrape data to a pickle file or parse pickle file to the DB')
     parser.add_argument('-data', action='store', required=False, help='pickle file name in case of parsing mode')
     return parser.parse_args()
