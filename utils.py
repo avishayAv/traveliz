@@ -40,3 +40,4 @@ def get_time_keywords_to_time_delta():
 whatsapp_group_to_location = {'סאבלט בדפנה': 'דפנה'}
 main_locations_to_cities = {'שוק התקווה': 'תל אביב', 'מחנה יהודה': 'ירושלים', "חוף הילטון": "תל אביב",
                             "נווה צדק": "תל אביב", "נמל יפו": "יפו", "פלורנטין": "תל אביב"}
+whatsapp_groups_to_scrape_and_parse = ['סאבלט בדפנה'] # TODO [YG] : let's find some more group
