@@ -9,7 +9,7 @@ from pathlib import Path
 from facebook_scraper import get_posts
 from tqdm import tqdm
 
-from AirbnbUtils import AirbnbScraper, AirbnbParser
+from AirbnbUtils import AirbnbScraper, AirbnbParser, airbnb_scraper_dir_path
 
 from FacebookSql import FacebookSql
 from ParsingFunctions import *
@@ -147,19 +147,20 @@ def whatsapp(mode, data):
 
 
 def airbnb(mode, data):
+    list_of_locations = [[]]
     if mode == 'scrape':
-        scraper = AirbnbScraper()
+        scraper = AirbnbScraper(list_of_locations)
         scraper.airbnb_scraper()
-        # TODO [ES] : dump to json (the return value is not json right now)
+        for location in list_of_locations:
+            os.system(f'mv {airbnb_scraper_dir_path}{location[1]}.json {AIRBNB_DATA_PATH}{location[1]}.json')
     else:
         # Load pre-scraped data + Paring
         parser = AirbnbParser()
-        res = parser.parse_airbnb_data(json_file_path=f'{AIRBNB_DATA_PATH}jlm.json')
-
-        # Dump to DB
-        # TODO [RS] : dump json to DB
+        assert os.path.isfile(f'{AIRBNB_DATA_PATH}{data}.json'), f"json with lists from {data} isn't exists"
+        airbnb_list_objects = parser.parse_airbnb_data(json_file_path=f'{AIRBNB_DATA_PATH}{data}.json')
+            # Dump to DB
+            # TODO [RS] : dump json to DB
         pass
-
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -173,15 +174,14 @@ def parse_args():
 
 def main():
     args = parse_args()
-    match args.source:
-        case 'whatsapp':
-            whatsapp(args.mode, args.data)
-        case 'facebook':
-            facebook(args.mode, args.data)
-        case 'airbnb':
-            airbnb(args.mode, args.data)
+    source = args.source
+    if source == 'whatsapp':
+        whatsapp(args.mode, args.data)
+    elif source == 'facebook':
+        facebook(args.mode, args.data)
+    elif source == 'airbnb':
+        airbnb(args.mode, args.data)
     exit(0)
-
 
 
 if __name__ == "__main__":

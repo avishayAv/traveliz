@@ -12,24 +12,27 @@ from Sublet import Airbnb
 
 AIRBNB_API_KEY = 'd306zoyjsyarp7ifhu67rjxn52tv0t20'
 activate_venv_command = ". ~/env/bin/activate"
-airbnb_scraper_dir_path = " ~/airbnb-scraper"
-list_of_locations = [
-    ["jerusalem , IL", "jlm"],
-    ["Tel Aviv , IL", "tlv"],
-    ["Haifa , IL", "haifa"],
-    ["Eilat , IL", "eilat"],
-    ["North, IL", "north"],
-    ["Netanya, IL", "netanya"]
-]
+airbnb_scraper_dir_path = "/Users/eliyasegev/airbnb-scraper/"
+default_list_of_locations = [["jerusalem , IL", "jlm"],
+                            ["Tel Aviv , IL", "tlv"],
+                            ["Haifa , IL", "haifa"],
+                            ["Eilat , IL", "eilat"],
+                            ["North, IL", "north"],
+                            ["Netanya, IL", "netanya"]]
 
 class AirbnbScraper():
-    def __init__(self):
+    def __init__(self, list_of_locations=None):
         self.scraping_page_limit = 5
         self.min_price_night_dollars = 50
         self.max_price_night_dollars = 300
+        if not list_of_locations:
+            self.list_of_locations = default_list_of_locations
+        else:
+            assert(type(list_of_locations) == list)
+            self.list_of_locations = list_of_locations
 
     def airbnb_scraper(self):
-        for location in list_of_locations:
+        for location in self.list_of_locations:
             assert len(location) == 2, f"location field is {location}, should be [<city, country>, <name of json file>]"
             self.get_data_from_airbnb(location=location)
             time.sleep(random.randint(120, 200))
@@ -42,15 +45,18 @@ class AirbnbScraper():
 
         os.system('( ' + activate_venv_command + ' && cd ' + airbnb_scraper_dir_path + ' && `' + command + '`)')
 
-#TODO (ES) use location objecy instead of string
 
 class AirbnbParser():
-    def __init__(self):
-        pass
+    def __init__(self, list_of_locations=None):
+        if not list_of_locations:
+            self.list_of_locations = default_list_of_locations
+        else:
+            assert(type(list_of_locations) == list)
+            self.list_of_locations = list_of_locations
 
     def airbnb_read_data_from_json(self):
         listings = []
-        for location in list_of_locations:
+        for location in self.list_of_locations:
             airbnb_data = self.parse_airbnb_data(location[1] + ".json")
             listings.extend(airbnb_data)
         return listings
