@@ -12,6 +12,7 @@ from tqdm import tqdm
 from AirbnbUtils import AirbnbScraper, AirbnbParser
 
 from FacebookSql import FacebookSql
+from WhatsappSql import WhatsappSql
 from ParsingFunctions import *
 from Sublet import Facebook, WhatsApp
 from paths import AIRBNB_DATA_PATH, WHATSAPP_DATA_PATH, FACEBOOK_DATA_PATH
@@ -123,10 +124,11 @@ def parse_data_from_whatsapp(data):
                     post_text=message['text'], post_time=post_time,
                     listing_location=whatsapp_group_to_location[group_name])
                 phone = message['sender']
+                post_text = message['text']
                 # TODO [YG] : parse images by phone number
-                sublets[group_name].append([message['text'], post_time,
+                sublets[group_name].append([post_text, post_time,
                                             WhatsApp(location, prices, max_people, None, rooms, post_time, phone,
-                                                     start_date, end_date)])
+                                                     start_date, end_date,post_text, group_name)])
     return sublets
 
 def whatsapp(mode, data):
@@ -139,9 +141,10 @@ def whatsapp(mode, data):
         sublets = load_pre_scraped_data(data, WHATSAPP_DATA_PATH)
 
         # Parsing
-        sublets = parse_data_from_whatsapp(sublets)
+        wa_sublets = parse_data_from_whatsapp(sublets)
 
         # Dump to DB
+        WhatsappSql().dump_to_whatsapp_raw(wa_sublets)
         # TODO [RS] : dump sublets tp DB
         pass
 
