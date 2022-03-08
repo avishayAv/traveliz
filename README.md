@@ -10,5 +10,7 @@ Facebook parser :
 * main.py -s facebook -m parse -data <pickle_path> 
 * main.py -s facebook -m parse (default mock pickle for debug) 
 
-AirBnb scraper : main.py -s airbnb -m scrape (will use the default list of locations to scrape)
+AirBnb
+AirBnb scraper : main.py -s airbnb -m scrape (will use the default list of locations to scrape).
+
 AirBnb parser : main.py -s airbnb -m parse -data <name of scraped location e.g "eilat">
