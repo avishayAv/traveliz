@@ -12,10 +12,11 @@ from tqdm import tqdm
 from AirbnbUtils import AirbnbScraper, AirbnbParser, airbnb_scraper_dir_path
 
 from FacebookSql import FacebookSql
+from WhatsappSql import WhatsappSql
 from ParsingFunctions import *
 from Sublet import Facebook, WhatsApp
 from paths import AIRBNB_DATA_PATH, WHATSAPP_DATA_PATH, FACEBOOK_DATA_PATH
-from utils import whatsapp_group_to_location
+from utils import whatsapp_group_to_location, whatsapp_groups_to_scrape_and_parse
 from whatsapp_utils import download_data_from_groups
 
 def get_data_from_facebook(already_done):
@@ -123,25 +124,29 @@ def parse_data_from_whatsapp(data):
                     post_text=message['text'], post_time=post_time,
                     listing_location=whatsapp_group_to_location[group_name])
                 phone = message['sender']
+                post_text = message['text']
                 # TODO [YG] : parse images by phone number
-                sublets[group_name].append([message['text'], post_time,
-                                            WhatsApp(location, prices, max_people, None, rooms, post_time, phone,
-                                                     start_date, end_date)])
+                sublets[group_name].append(WhatsApp(location, prices, max_people, None, rooms, post_time, phone,
+                                                     start_date, end_date, post_text, group_name))
     return sublets
 
+
 def whatsapp(mode, data):
-    groups = ['סאבלט בדפנה'] # TODO [YG] : let's find some more groups
     if mode == 'scrape':
-        sublets = download_data_from_groups(groups) # TODO [YG] : handle chrome versioning
+        sublets = download_data_from_groups(whatsapp_groups_to_scrape_and_parse) # TODO [YG] : handle chrome versioning
         pickle.dump(sublets, open(f'{WHATSAPP_DATA_PATH}mock.pickle', 'wb'))
-    else:
+    if mode == 'parse':
         # Load pre-scraped data
         sublets = load_pre_scraped_data(data, WHATSAPP_DATA_PATH)
 
         # Parsing
-        sublets = parse_data_from_whatsapp(sublets)
+        wa_sublets = parse_data_from_whatsapp(sublets)
+        pickle.dump(wa_sublets, open('data/whatsapp/wa_sublets.pickle', "wb"))
 
+    if mode == 'dump':
         # Dump to DB
+        wa_sublets = pickle.load(open("data/whatsapp/wa_sublets.pickle", "rb"))
+        WhatsappSql().dump_to_whatsapp_raw(wa_sublets)
         # TODO [RS] : dump sublets tp DB
         pass
 
@@ -166,7 +171,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-source', action='store', required=True, choices=['whatsapp', 'facebook', 'airbnb'],
                         help='data source')
-    parser.add_argument('-mode', action='store', required=True, choices=['scrape', 'parse'],
+    parser.add_argument('-mode', action='store', required=True, choices=['scrape', 'parse', 'dump'],
                         help='scrape data to a pickle file or parse pickle file to the DB')
     parser.add_argument('-data', action='store', required=False, help='pickle file name in case of parsing mode')
     return parser.parse_args()

@@ -501,8 +501,7 @@ def scrape_copyable(copyable_text):
 
     # Get the sender, date/time, and msg contents
     copyable_scrape['sender'] = copyable_attrs[1]
-    copyable_scrape['datetime'] = parse_datetime(
-        f"{copyable_attrs[0].split(', ')[1]} {copyable_attrs[0].split(', ')[0]}")
+    copyable_scrape['datetime'] = parse_datetime(f"{copyable_attrs[0].split(', ')[1]} {copyable_attrs[0].split(', ')[0]}")
 
     # Get the text-only portion of the message contents (always in a span w/ copyable-text class)
     content = copyable_text.find('span', 'copyable-text')
@@ -622,20 +621,23 @@ def parse_datetime(text, time_only=False):
 
     # Try parsing when text is some datetime value e.g. 2/15/2021 2:35 P.M.
     if not time_only:
-        for fmt in ('%m/%d/%Y %I:%M %p', '%Y-%m-%d %I:%M %p'):
+        for fmt in ('%m/%d/%Y %I:%M %p', '%Y-%m-%d %I:%M %p', '%d/%m/%Y %H:%M'):
             try:
                 return datetime.strptime(text, fmt)
             except ValueError:
                 continue
         raise ValueError(
-            f"{text} does not match a valid datetime format of '%m/%d/%Y %I:%M %p' or '%Y-%m-%d %I:%M %p'. Make sure your WhatsApp language settings on your phone are set to English.")
+            f"{text} does not match a valid datetime format of '%m/%d/%Y %I:%M %p' or '%Y-%m-%d %I:%M %p' or '%m/%d/%Y %H:%M' or '%Y-%m-%d %H:%M'. Make sure your WhatsApp language settings on your phone are set to English.")
 
     # Try parsing when text is some time value e.g. 2:35 PM
     else:
         try:
             return datetime.strptime(text, '%I:%M %p')
         except ValueError:
-            pass
+            try:
+                return datetime.strptime(text, '%H:%M')
+            except ValueError:
+                pass
         raise ValueError(
             f"{text} does not match expected time format of '%I:%M %p'. Make sure your WhatsApp language settings on your phone are set to English.")
 

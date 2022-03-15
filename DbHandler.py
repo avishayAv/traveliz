@@ -4,11 +4,11 @@ import datetime
 
 class DbHandler(object):
     # Config
-    HOST_NAME = "traveliz2.c7izxvnjnup5.us-east-1.rds.amazonaws.com"
-    USER_NAME = "admin"
-    PASSWORD = "DontWorry2027"
+    HOST_NAME = "az1-ss100.a2hosting.com"
+    USER_NAME = "traveliz_sharvit"
+    PASSWORD = "Rugh1234!"
     PORT = 3306
-    DB_NAME = "Traveliz"
+    DB_NAME = "traveliz_main"
 
     def __init__(self):
         self.connection = pymysql.connect(
@@ -48,3 +48,18 @@ class DbHandler(object):
         print(field_names)
         for value in description:
             print(value)
+
+base_raw_columns = """
+                      creation_date,
+                      location_city,
+                      price_per_night,
+                      discounted_price_per_night,
+                      discounted_period,
+                      minimum_period,
+                      price_per_month,
+                      price_per_weekend,
+                      max_people,
+                      images,
+                      rooms_number,
+                      rooms_shared,
+                """
