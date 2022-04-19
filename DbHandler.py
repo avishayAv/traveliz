@@ -49,17 +49,6 @@ class DbHandler(object):
         for value in description:
             print(value)
 
-    def drop_column(self, table, column_name):
-        self.cursor.execute("ALTER TABLE %s DROP COLUMN %s" % (table, column_name))
-
-    def insert_into_string(table_name, columns):
-        values = '%s,' * columns.count(',') + '%s'
-        sql = f"""
-          INSERT INTO {table_name} ({columns}) 
-          VALUES ({values})
-          """
-        return sql
-
     def bot_query(self, start_date, end_date, price, city):
         sql = f"""
             select post_url, 'facebook' as source
