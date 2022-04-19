@@ -82,6 +82,7 @@ def get_price_and_search(self, message):
     bot.send_message(message.chat.id, 'your answer here!')
     # TODO [RS] : handle query here
     sublets = self.db_handler.bot_query(request.start_date, request.end_date, request.price, request.location)
+    self.db_handler.close_all()
     print (sublets)
     bot.send_message(message.chat.id, sublets)
     send_start_message(message)
