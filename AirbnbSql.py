@@ -13,9 +13,11 @@ class AirbnbSql:
         AirbnbGroupsRaw_columns = base_raw_columns + """
                                                      post_url,
                                                      rating,
-                                                     description
+                                                     description,
+                                                     start_date,
+                                                     end_date
                                                      """
-        # Flat Whatsapp Data
+        # Flat Airbnb Data
         flat_airbnb_sublets = []
         for sublet in airbnb_sublets:
             flat_sublet = (
@@ -36,6 +38,8 @@ class AirbnbSql:
                 sublet.post_url,            # post_url
                 sublet.rating,              # rating
                 sublet.description,         # description
+                None,                       # start_date
+                None,                       # end_date
                 )
             flat_airbnb_sublets.append(flat_sublet)
 

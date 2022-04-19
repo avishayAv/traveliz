@@ -49,6 +49,41 @@ class DbHandler(object):
         for value in description:
             print(value)
 
+    def drop_column(self, table, column_name):
+        self.cursor.execute("ALTER TABLE %s DROP COLUMN %s" % (table, column_name))
+
+    def insert_into_string(table_name, columns):
+        values = '%s,' * columns.count(',') + '%s'
+        sql = f"""
+          INSERT INTO {table_name} ({columns}) 
+          VALUES ({values})
+          """
+        return sql
+
+    def bot_query(self, start_date, end_date, price, city):
+        sql = f"""
+            select post_url, 'facebook' as source
+            from FaceGroupsRaw
+            where start_date = {start_date} and end_date = {end_date}
+            and location_city = {city}
+            and (price_per_night <= {price} or discounted_price_per_night <= {price})
+            UNION ALL
+            select post_url, 'airbnb' as source
+            from AirbnbRaw
+            where start_date = {start_date} and end_date = {end_date}
+            and location_city = {city}
+            and (price_per_night <= {price} or discounted_price_per_night <= {price})
+            UNION ALL
+            select group_name as post_url, 'whatsapp' as source
+            from WhatsGroupsRaw
+            where start_date = {start_date} and end_date = {end_date}
+            and location_city = {city}
+            and (price_per_night <= {price} or discounted_price_per_night <= {price})
+            """
+        self.cursor.execute(sql)
+        result = self.cursor.fetchall()
+        return result
+
 base_raw_columns = """
                       creation_date,
                       location_city,

@@ -3,6 +3,7 @@ import telebot
 import re
 import datetime
 import dateutil.parser as dparser
+from DbHandler import DbHandler
 
 API_KEY = os.getenv('API_KEY')
 API_KEY = "5265235643:AAFHeaXEOg5Hqqp6XHOp91pUziLJ1ihKrY8"
@@ -15,6 +16,7 @@ class Request:
         self.end_date = ''
         self.location: str = ''
         self.price: int = 0
+        self.db_handler = DbHandler()
 
     def print_date_range(self):
         return f'{self.start_date.strftime("%d.%m.%y")}-{self.end_date.strftime("%d.%m.%y")}'
@@ -74,13 +76,17 @@ def get_location_ask_for_price(message):
 
 
 @bot.message_handler(func=is_price)
-def get_price_and_search(message):
+def get_price_and_search(self, message):
     request.price = int(message.text)
     bot.send_message(message.chat.id, str(request))
     bot.send_message(message.chat.id, 'your answer here!')
     # TODO [RS] : handle query here
+    sublets = self.db_handler.bot_query(request.start_date, request.end_date, request.price, request.location)
+    print (sublets)
+    bot.send_message(message.chat.id, sublets)
     send_start_message(message)
 
 
 request = Request()
 bot.polling()
+
