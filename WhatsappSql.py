@@ -1,5 +1,4 @@
 import datetime
-import pymysql
 from DbHandler import DbHandler
 from DbHandler import base_raw_columns
 from utils import whatsapp_groups_to_scrape_and_parse

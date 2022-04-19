@@ -13,6 +13,7 @@ from AirbnbUtils import AirbnbScraper, AirbnbParser, airbnb_scraper_dir_path
 
 from FacebookSql import FacebookSql
 from WhatsappSql import WhatsappSql
+from AirbnbSql import AirbnbSql
 from ParsingFunctions import *
 from Sublet import Facebook, WhatsApp
 from paths import AIRBNB_DATA_PATH, WHATSAPP_DATA_PATH, FACEBOOK_DATA_PATH
@@ -158,14 +159,19 @@ def airbnb(mode, data):
         scraper.airbnb_scraper()
         for location in list_of_locations:
             os.system(f'mv {airbnb_scraper_dir_path}{location[1]}.json {AIRBNB_DATA_PATH}{location[1]}.json')
-    else:
-        # Load pre-scraped data + Paring
+    if mode == 'parse':
+        # Load pre-scraped data + Parsing
         parser = AirbnbParser()
         assert os.path.isfile(f'{AIRBNB_DATA_PATH}{data}.json'), f"json with lists from {data} isn't exists"
-        airbnb_list_objects = parser.parse_airbnb_data(json_file_path=f'{AIRBNB_DATA_PATH}{data}.json')
-            # Dump to DB
-            # TODO [RS] : dump json to DB
+        airbnb_sublets = parser.parse_airbnb_data(json_file_path=f'{AIRBNB_DATA_PATH}{data}.json')
+        pickle.dump(airbnb_sublets, open('data/airbnb/airbnb_sublets.pickle', "wb"))
+
+    if mode == 'dump':
+        # Dump to DB
+        airbnb_sublets = pickle.load(open("data/airbnb/airbnb_sublets.pickle", "rb"))
+        AirbnbSql().dump_to_airbnb_raw(airbnb_sublets)
         pass
+    pass
 
 def parse_args():
     parser = argparse.ArgumentParser()
