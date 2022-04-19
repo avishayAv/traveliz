@@ -11,26 +11,27 @@ class AirbnbSql:
 
     def dump_to_airbnb_raw(self, airbnb_sublets):
         AirbnbGroupsRaw_columns = base_raw_columns + """
-                                                    post_url,
-                                                    rating,
-                                                    description                                            """
+                                                     post_url,
+                                                     rating,
+                                                     description
+                                                     """
         # Flat Whatsapp Data
         flat_airbnb_sublets = []
         for sublet in airbnb_sublets:
             flat_sublet = (
                 # Base columns
                 datetime.datetime.now(),    # creation_date
-                sublet.location.city,       # location_city
-                None,                       # price_per_night int     # TODO [AA+YG] : handle price
-                None,                       # discounted_price_per_night int  # TODO [AA+YG] : handle price
-                None,                       # discounted_period int   # TODO [AA+YG] : handle price
-                None,                       # minimum_period int  # TODO [AA+YG] : handle price
-                None,                       # price_per_month # TODO [AA+YG] : handle price
-                None,                       # price_per_weekend # TODO [AA+YG] : handle price
+                None,                       # location_city
+                None,                       # price_per_night int
+                None,                       # discounted_price_per_night int
+                None,                       # discounted_period int
+                None,                       # minimum_period int
+                None,                       # price_per_month
+                None,                       # price_per_weekend
                 sublet.max_people,          # max_people
                 None,                       # images
-                sublet.rooms.number,        # rooms_number
-                sublet.rooms.shared,        # rooms_shared
+                sublet.rooms,               # rooms_number
+                None,                       # rooms_shared
                 # Airbnb data
                 sublet.post_url,            # post_url
                 sublet.rating,              # rating

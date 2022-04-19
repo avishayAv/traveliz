@@ -139,11 +139,9 @@ def whatsapp(mode, data):
     if mode == 'parse':
         # Load pre-scraped data
         sublets = load_pre_scraped_data(data, WHATSAPP_DATA_PATH)
-
         # Parsing
         wa_sublets = parse_data_from_whatsapp(sublets)
         pickle.dump(wa_sublets, open('data/whatsapp/wa_sublets.pickle', "wb"))
-
     if mode == 'dump':
         # Dump to DB
         wa_sublets = pickle.load(open("data/whatsapp/wa_sublets.pickle", "rb"))
@@ -162,10 +160,11 @@ def airbnb(mode, data):
     if mode == 'parse':
         # Load pre-scraped data + Parsing
         parser = AirbnbParser()
+        # The airbnb data is not unified so using tlv json
+        data = 'tlv'
         assert os.path.isfile(f'{AIRBNB_DATA_PATH}{data}.json'), f"json with lists from {data} isn't exists"
         airbnb_sublets = parser.parse_airbnb_data(json_file_path=f'{AIRBNB_DATA_PATH}{data}.json')
         pickle.dump(airbnb_sublets, open('data/airbnb/airbnb_sublets.pickle', "wb"))
-
     if mode == 'dump':
         # Dump to DB
         airbnb_sublets = pickle.load(open("data/airbnb/airbnb_sublets.pickle", "rb"))
